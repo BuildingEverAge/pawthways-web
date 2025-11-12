@@ -1,0 +1,254 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Pawthways — Transparency</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <noscript>
+      <link rel="stylesheet" href="assets/css/noscript.css" />
+    </noscript>
+  </head>
+  <body class="is-preload">
+    <!-- Wrapper -->
+    <div id="wrapper" class="divided">
+
+      <!-- HERO -->
+      <section
+        class="banner style1 orient-left content-align-left image-position-right onload-image-fade-in onload-content-fade-right"
+      >
+        <div class="content">
+          <h1>Transparency</h1>
+          <p class="major">
+            Real donations. Real receipts. Each log below is created from our
+            internal transparency system and stored directly in our database —
+            so you can always see how help is being used.
+          </p>
+          <ul class="actions stacked">
+            <li>
+              <a href="/watch-and-help.html" class="button">
+                Back to Watch &amp; Help
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="image">
+          <img
+            src="images/paw-transparency.jpg"
+            alt="Pawthways transparency"
+          />
+        </div>
+      </section>
+
+      <!-- TRANSPARENCY LOGS -->
+      <section id="logs" class="wrapper style1 align-center">
+        <div class="inner">
+          <h2>Latest Transparency Logs</h2>
+          <p id="logs-status">
+            Loading transparency records...
+          </p>
+
+          <div id="logs-list" class="items style1 medium">
+            <!-- Cards injected by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- FUNDED RESCUES SNAPSHOT -->
+      <section id="funded-rescues" class="wrapper style2 align-center">
+        <div class="inner">
+          <h2>Rescues Marked as Funded</h2>
+          <p id="funded-status">
+            Loading funded rescues...
+          </p>
+
+          <div id="funded-list" class="items style1 medium">
+            <!-- Funded rescues injected by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="wrapper style1 align-center">
+        <div class="inner">
+          <p>Pawthways — Turning one leap into thousands of second chances.</p>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Supabase JS -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+
+    <!-- Template JS -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery.scrollex.min.js"></script>
+    <script src="assets/js/jquery.scrolly.min.js"></script>
+    <script src="assets/js/browser.min.js"></script>
+    <script src="assets/js/breakpoints.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/main.js"></script>
+
+    <!-- Pawthways: Transparency logic -->
+    <script>
+      // TODO: put the SAME values you use in watch-and-help.html
+      const SUPABASE_URL = "https://fjlonwabqmbzkprddqsv.supabase.co";
+      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbG9ud2FicW1iemtwcmRkcXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MDY3ODEsImV4cCI6MjA3ODM4Mjc4MX0.jBnyGnIhmAUFGg0RL8sw-5L8tBAgiJM5s-AXuHPtMuU";
+
+      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      function formatDate(isoString) {
+        if (!isoString) return "";
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return "";
+        return d.toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+        });
+      }
+
+      function escapeHtml(str) {
+        if (!str) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      async function loadTransparency() {
+        const logsStatusEl = document.getElementById("logs-status");
+        const logsListEl = document.getElementById("logs-list");
+        const fundedStatusEl = document.getElementById("funded-status");
+        const fundedListEl = document.getElementById("funded-list");
+
+        if (!logsStatusEl || !logsListEl || !fundedStatusEl || !fundedListEl) {
+          return;
+        }
+
+        logsStatusEl.textContent = "Loading transparency records...";
+        fundedStatusEl.textContent = "Loading funded rescues...";
+
+        // --- Fetch transparency logs ---
+        const { data: logs, error: logsError } = await supabaseClient
+          .from("transparency_logs")
+          .select("id, rescue_id, type, description, file_url, created_at")
+          .order("created_at", { ascending: false })
+          .limit(24);
+
+        if (logsError) {
+          console.error("Error loading transparency_logs:", logsError);
+          logsStatusEl.textContent =
+            "We could not load transparency logs right now. Please try again later.";
+        } else if (!logs || logs.length === 0) {
+          logsStatusEl.textContent =
+            "No transparency logs have been published yet — they will appear here as soon as we start the first campaigns.";
+        } else {
+          logsStatusEl.textContent = "";
+          logsListEl.innerHTML = logs
+            .map((log) => {
+              const dateStr = formatDate(log.created_at);
+              const type = escapeHtml(log.type || "update");
+              const description = escapeHtml(log.description || "");
+              const fileUrl = log.file_url || "";
+              const rescueId = log.rescue_id ? String(log.rescue_id) : "";
+
+              const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
+
+              const linkHtml = fileUrl
+                ? `<p><a href="${fileUrl}" target="_blank" rel="noopener noreferrer">
+                     View proof / file
+                   </a></p>`
+                : "<p><em>No file link attached (yet).</em></p>";
+
+              const rescueHtml = rescueId
+                ? `<p><small>Linked rescue: <code>${escapeHtml(rescueId)}</code></small></p>`
+                : "";
+
+              return `
+                <section class="spotlight style1 orient-left content-align-left image-position-center">
+                  <div class="content">
+                    <h3>${typeLabel}</h3>
+                    <p>
+                      ${description || "<em>No description provided.</em>"}
+                    </p>
+                    ${linkHtml}
+                    ${rescueHtml}
+                    <p><small>${dateStr || ""}</small></p>
+                  </div>
+                </section>
+              `;
+            })
+            .join("");
+        }
+
+        // --- Fetch funded rescues snapshot ---
+        const { data: fundedRescues, error: fundedError } = await supabaseClient
+          .from("rescues")
+          .select(
+            "id, title, animal_name, location, image_url, target_amount, currency, status, created_at"
+          )
+          .eq("status", "funded")
+          .order("created_at", { ascending: false })
+          .limit(12);
+
+        if (fundedError) {
+          console.error("Error loading funded rescues:", fundedError);
+          fundedStatusEl.textContent =
+            "We could not load funded rescues right now.";
+        } else if (!fundedRescues || fundedRescues.length === 0) {
+          fundedStatusEl.textContent =
+            "No rescues are marked as funded yet — once campaigns reach their goals, they will appear here.";
+        } else {
+          fundedStatusEl.textContent = "";
+          fundedListEl.innerHTML = fundedRescues
+            .map((r) => {
+              const title = escapeHtml(r.title || "Rescue case");
+              const animal = escapeHtml(r.animal_name || "");
+              const location = escapeHtml(r.location || "");
+              const goal =
+                r.target_amount != null
+                  ? `Goal: ${r.target_amount} ${r.currency || ""}`
+                  : "";
+              const dateStr = formatDate(r.created_at);
+              const imgHtml = r.image_url
+                ? `
+                  <div class="image">
+                    <img src="${r.image_url}" alt="${title}" />
+                  </div>
+                `
+                : "";
+
+              const subtitleParts = [];
+              if (animal) subtitleParts.push(`<strong>${animal}</strong>`);
+              if (location) subtitleParts.push(location);
+              const subtitle = subtitleParts.join(" · ");
+
+              return `
+                <section class="spotlight style1 orient-left content-align-left image-position-center">
+                  ${imgHtml}
+                  <div class="content">
+                    <h3>${title}</h3>
+                    ${
+                      subtitle
+                        ? `<p>${subtitle}</p>`
+                        : "<p><em>No extra details provided.</em></p>"
+                    }
+                    ${goal ? `<p>${goal}</p>` : ""}
+                    <p><small>Marked as funded ${dateStr || ""}</small></p>
+                  </div>
+                </section>
+              `;
+            })
+            .join("");
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadTransparency);
+    </script>
+  </body>
+</html>
