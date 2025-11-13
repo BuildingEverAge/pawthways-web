@@ -1,0 +1,432 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Pawthways — Watch & Help</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <noscript>
+      <link rel="stylesheet" href="assets/css/noscript.css" />
+    </noscript>
+
+    <!-- Estilos extra para las cards y barra de progreso -->
+    <style>
+      .rescue-grid {
+        display: grid;
+        gap: 2rem;
+      }
+
+      @media (min-width: 768px) {
+        .rescue-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (min-width: 1100px) {
+        .rescue-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      .rescue-card {
+        background: #ffffff;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .rescue-card-image {
+        position: relative;
+        width: 100%;
+        padding-top: 65%;
+        overflow: hidden;
+      }
+
+      .rescue-card-image img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .rescue-card-body {
+        padding: 1.2rem 1.2rem 1rem;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+      }
+
+      .rescue-card-body h3 {
+        margin: 0 0 0.35rem;
+      }
+
+      .rescue-meta {
+        font-size: 0.9rem;
+        opacity: 0.8;
+        margin-bottom: 0.75rem;
+      }
+
+      .rescue-story {
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+        max-height: 4.8em;
+        overflow: hidden;
+      }
+
+      .progress-wrap {
+        margin-bottom: 0.75rem;
+      }
+
+      .progress-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        margin-bottom: 0.25rem;
+        opacity: 0.85;
+        gap: 0.5rem;
+      }
+
+      .progress-header span:last-child {
+        text-align: right;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: #ff6f61;
+        width: 0%;
+        transition: width 0.6s ease-out;
+      }
+
+      .rescue-card-footer {
+        padding: 0 1.2rem 1.2rem;
+        margin-top: auto;
+      }
+
+      .rescue-card-footer .actions {
+        margin: 0;
+      }
+
+      .rescue-status-badge {
+        display: inline-block;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        opacity: 0.8;
+        margin-left: 0.5rem;
+      }
+
+      .rescue-status-badge--active {
+        border-color: #23c552;
+        color: #23c552;
+      }
+
+      .global-cta {
+        margin-top: 3rem;
+      }
+    </style>
+  </head>
+  <body class="is-preload">
+    <!-- Wrapper -->
+    <div id="wrapper" class="divided">
+
+      <!-- HERO -->
+      <section
+        class="banner style1 orient-left content-align-left image-position-right onload-image-fade-in onload-content-fade-right"
+      >
+        <div class="content">
+          <h1>Watch & Help</h1>
+          <p class="major">
+            Real cases. Real animals. Transparent goals.
+            Every card below is powered directly from our rescue database —
+            no fake stories, no invisible money.
+          </p>
+          <ul class="actions stacked">
+            <li>
+              <a href="/index.html" class="button smooth-scroll-middle">
+                Read the origin story
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="image">
+          <img
+            src="images/paw-hero.jpg"
+            alt="Pawthways rescue"
+          />
+        </div>
+      </section>
+
+      <!-- WATCH THE STORY & HELP -->
+      <section class="wrapper style1 align-center">
+        <div class="inner">
+          <h2>Watch the Story & Help</h2>
+          <p>
+            Watching and sharing this story amplifies our reach and supports
+            our pledge to fund real rescues featured on Pawthways.
+          </p>
+          <div
+            style="
+              position:relative;
+              padding-bottom:56.25%;
+              height:0;
+              overflow:hidden;
+              border-radius:16px;
+              max-width:960px;
+              margin:0 auto;
+            "
+          >
+            <iframe
+              src="https://www.youtube.com/embed/sRBxWGkS_bg?rel=0&modestbranding=1"
+              title="The Bottle That Carried Us — Pawthways"
+              frameborder="0"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              style="
+                position:absolute;
+                top:0;
+                left:0;
+                width:100%;
+                height:100%;
+                border:0;
+              "
+            ></iframe>
+          </div>
+        </div>
+      </section>
+
+      <!-- ACTIVE RESCUES LIST (Supabase-powered) -->
+      <section id="active-rescues" class="wrapper style1 align-center">
+        <div class="inner">
+          <h2>Active Rescues You Can Help Now</h2>
+          <p id="rescues-status">
+            Loading verified cases...
+          </p>
+
+          <!-- Grid de rescates -->
+          <div id="rescues-list" class="rescue-grid">
+            <!-- Cards will be injected here by JS -->
+          </div>
+
+          <!-- CTA global -->
+          <div class="global-cta">
+            <p class="major">
+              When one rescue is funded, we move to the next animal in danger.
+              Your help today becomes food, medicine and real second chances.
+            </p>
+            <ul class="actions stacked">
+              <li>
+                <a href="/Donate" class="button primary">
+                  Support the next rescue
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- WHY THIS MATTERS / CTA -->
+      <section class="wrapper style3 align-center">
+        <div class="inner">
+          <h2>Why this matters</h2>
+          <p>
+            Pawthways connects emotional stories with verifiable impact.
+            When a rescue is funded or completed, you’ll see it reflected here
+            and in our Transparency page.
+          </p>
+          <ul class="actions stacked">
+            <li>
+              <a href="/index.html" class="button">
+                Relive the Pawthways story
+              </a>
+            </li>
+            <li>
+              <a href="/transparency.html" class="button primary">
+                See Transparency
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="wrapper style1 align-center">
+        <div class="inner">
+          <p>Pawthways — Turning one leap into thousands of second chances.</p>
+        </div>
+      </footer>
+    </div>
+
+    <!-- Supabase JS -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+
+    <!-- Template JS -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery.scrollex.min.js"></script>
+    <script src="assets/js/jquery.scrolly.min.js"></script>
+    <script src="assets/js/browser.min.js"></script>
+    <script src="assets/js/breakpoints.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/main.js"></script>
+
+    <!-- Pawthways: Load active rescues from Supabase -->
+    <script>
+      // 🔐 Ya está configurado con tu proyecto Supabase
+      const SUPABASE_URL = 'https://fjlonwabqmbzkprddqsv.supabase.co';
+      const SUPABASE_ANON_KEY =
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbG9ud2FicW1iemtwcmRkcXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MDY3ODEsImV4cCI6MjA3ODM4Mjc4MX0.jBnyGnIhmAUFGg0RL8sw-5L8tBAgiJM5s-AXuHPtMuU';
+
+      const supabaseClient = supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+      );
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+      }
+
+      // [Inferencia] De momento no tenemos columna de cantidad recaudada,
+      // así que dejamos la barra en 0% y texto neutro.
+      function getProgress(rescue) {
+        const target = rescue.target_amount || 0;
+        const labelBase = target
+          ? `Goal: ${target} ${rescue.currency || ''}`
+          : 'Goal coming soon';
+
+        return {
+          pct: 0,
+          label: labelBase,
+        };
+      }
+
+      async function loadActiveRescues() {
+        const statusEl = document.getElementById('rescues-status');
+        const listEl = document.getElementById('rescues-list');
+
+        if (!statusEl || !listEl) return;
+
+        statusEl.textContent = 'Loading verified cases...';
+
+        const { data, error } = await supabaseClient
+          .from('rescues')
+          .select(
+            'id, title, animal_name, location, target_amount, currency, status, image_url, story, created_at'
+          )
+          .eq('status', 'active')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Error loading rescues:', error);
+          statusEl.textContent =
+            'We could not load rescues right now. Please try again in a moment.';
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          statusEl.textContent =
+            'No active rescues at this moment — check back soon.';
+          return;
+        }
+
+        statusEl.textContent = '';
+
+        const html = data
+          .map((rescue) => {
+            const imgHtml = rescue.image_url
+              ? `
+              <div class="rescue-card-image">
+                <img src="${escapeHtml(
+                  rescue.image_url
+                )}" alt="${escapeHtml(rescue.title || 'Rescue case')}" />
+              </div>`
+              : '';
+
+            const snippet =
+              rescue.story && rescue.story.length > 240
+                ? rescue.story.substring(0, 240) + '…'
+                : rescue.story || '';
+
+            const goalText = rescue.target_amount
+              ? `Goal: ${rescue.target_amount} ${rescue.currency || ''}`
+              : '';
+
+            const { pct, label } = getProgress(rescue);
+
+            return `
+              <article class="rescue-card">
+                ${imgHtml}
+                <div class="rescue-card-body">
+                  <h3>
+                    ${escapeHtml(rescue.title || 'Rescue case')}
+                    <span class="rescue-status-badge rescue-status-badge--active">active</span>
+                  </h3>
+                  <div class="rescue-meta">
+                    ${
+                      rescue.animal_name
+                        ? `<strong>${escapeHtml(
+                            rescue.animal_name
+                          )}</strong> · `
+                        : ''
+                    }
+                    ${escapeHtml(rescue.location || '')}
+                  </div>
+                  ${
+                    snippet
+                      ? `<p class="rescue-story">${escapeHtml(snippet)}</p>`
+                      : ''
+                  }
+
+                  <div class="progress-wrap">
+                    <div class="progress-header">
+                      <span>${goalText || 'Rescue goal'}</span>
+                      <span>${escapeHtml(label)}</span>
+                    </div>
+                    <div class="progress-bar">
+                      <div class="progress-fill" style="width: ${pct}%;"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="rescue-card-footer">
+                  <ul class="actions stacked">
+                    <li>
+                      <a href="/Donate" class="button primary">
+                        Help this rescue
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </article>
+            `;
+          })
+          .join('');
+
+        listEl.innerHTML = html;
+      }
+
+      document.addEventListener('DOMContentLoaded', loadActiveRescues);
+    </script>
+  </body>
+</html>
