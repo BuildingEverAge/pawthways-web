@@ -11,137 +11,6 @@
     <noscript>
       <link rel="stylesheet" href="assets/css/noscript.css" />
     </noscript>
-
-    <!-- Estilos extra para las cards y barra de progreso -->
-    <style>
-      .rescue-grid {
-        display: grid;
-        gap: 2rem;
-      }
-
-      @media (min-width: 768px) {
-        .rescue-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      @media (min-width: 1100px) {
-        .rescue-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-      }
-
-      .rescue-card {
-        background: #ffffff;
-        border-radius: 1rem;
-        overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-      }
-
-      .rescue-card-image {
-        position: relative;
-        width: 100%;
-        padding-top: 65%;
-        overflow: hidden;
-      }
-
-      .rescue-card-image img {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        display: block;
-      }
-
-      .rescue-card-body {
-        padding: 1.2rem 1.2rem 1rem;
-        display: flex;
-        flex-direction: column;
-        flex: 1;
-      }
-
-      .rescue-card-body h3 {
-        margin: 0 0 0.35rem;
-      }
-
-      .rescue-meta {
-        font-size: 0.9rem;
-        opacity: 0.8;
-        margin-bottom: 0.75rem;
-      }
-
-      .rescue-story {
-        font-size: 0.95rem;
-        margin-bottom: 1rem;
-        max-height: 4.8em;
-        overflow: hidden;
-      }
-
-      .progress-wrap {
-        margin-bottom: 0.75rem;
-      }
-
-      .progress-header {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.8rem;
-        margin-bottom: 0.25rem;
-        opacity: 0.85;
-        gap: 0.5rem;
-      }
-
-      .progress-header span:last-child {
-        text-align: right;
-      }
-
-      .progress-bar {
-        width: 100%;
-        height: 8px;
-        border-radius: 999px;
-        background: rgba(0, 0, 0, 0.08);
-        overflow: hidden;
-      }
-
-      .progress-fill {
-        height: 100%;
-        border-radius: 999px;
-        background: #ff6f61;
-        width: 0%;
-        transition: width 0.6s ease-out;
-      }
-
-      .rescue-card-footer {
-        padding: 0 1.2rem 1.2rem;
-        margin-top: auto;
-      }
-
-      .rescue-card-footer .actions {
-        margin: 0;
-      }
-
-      .rescue-status-badge {
-        display: inline-block;
-        font-size: 0.75rem;
-        padding: 0.25rem 0.6rem;
-        border-radius: 999px;
-        border: 1px solid rgba(0, 0, 0, 0.12);
-        opacity: 0.8;
-        margin-left: 0.5rem;
-      }
-
-      .rescue-status-badge--active {
-        border-color: #23c552;
-        color: #23c552;
-      }
-
-      .global-cta {
-        margin-top: 3rem;
-      }
-    </style>
   </head>
   <body class="is-preload">
     <!-- Wrapper -->
@@ -220,24 +89,8 @@
             Loading verified cases...
           </p>
 
-          <!-- Grid de rescates -->
-          <div id="rescues-list" class="rescue-grid">
+          <div id="rescues-list" class="items style1 medium">
             <!-- Cards will be injected here by JS -->
-          </div>
-
-          <!-- CTA global -->
-          <div class="global-cta">
-            <p class="major">
-              When one rescue is funded, we move to the next animal in danger.
-              Your help today becomes food, medicine and real second chances.
-            </p>
-            <ul class="actions stacked">
-              <li>
-                <a href="/Donate" class="button primary">
-                  Support the next rescue
-                </a>
-              </li>
-            </ul>
           </div>
         </div>
       </section>
@@ -253,12 +106,17 @@
           </p>
           <ul class="actions stacked">
             <li>
+              <a href="#active-rescues" class="button primary">
+                Support the next rescue
+              </a>
+            </li>
+            <li>
               <a href="/index.html" class="button">
                 Relive the Pawthways story
               </a>
             </li>
             <li>
-              <a href="/transparency.html" class="button primary">
+              <a href="/transparency.html" class="button">
                 See Transparency
               </a>
             </li>
@@ -288,39 +146,13 @@
 
     <!-- Pawthways: Load active rescues from Supabase -->
     <script>
-      // 🔐 Ya está configurado con tu proyecto Supabase
       const SUPABASE_URL = 'https://fjlonwabqmbzkprddqsv.supabase.co';
-      const SUPABASE_ANON_KEY =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbG9ud2FicW1iemtwcmRkcXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MDY3ODEsImV4cCI6MjA3ODM4Mjc4MX0.jBnyGnIhmAUFGg0RL8sw-5L8tBAgiJM5s-AXuHPtMuU';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbG9ud2FicW1iemtwcmRkcXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MDY3ODEsImV4cCI6MjA3ODM4Mjc4MX0.jBnyGnIhmAUFGg0RL8sw-5L8tBAgiJM5s-AXuHPtMuU';
 
       const supabaseClient = supabase.createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY
       );
-
-      function escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;')
-          .replace(/'/g, '&#39;');
-      }
-
-      // [Inferencia] De momento no tenemos columna de cantidad recaudada,
-      // así que dejamos la barra en 0% y texto neutro.
-      function getProgress(rescue) {
-        const target = rescue.target_amount || 0;
-        const labelBase = target
-          ? `Goal: ${target} ${rescue.currency || ''}`
-          : 'Goal coming soon';
-
-        return {
-          pct: 0,
-          label: labelBase,
-        };
-      }
 
       async function loadActiveRescues() {
         const statusEl = document.getElementById('rescues-status');
@@ -353,63 +185,40 @@
 
         statusEl.textContent = '';
 
-        const html = data
+        listEl.innerHTML = data
           .map((rescue) => {
             const imgHtml = rescue.image_url
               ? `
-              <div class="rescue-card-image">
-                <img src="${escapeHtml(
-                  rescue.image_url
-                )}" alt="${escapeHtml(rescue.title || 'Rescue case')}" />
+              <div class="image">
+                <img src="${rescue.image_url}" alt="${rescue.title || 'Rescue case'}" />
               </div>`
               : '';
 
-            const snippet =
-              rescue.story && rescue.story.length > 240
-                ? rescue.story.substring(0, 240) + '…'
-                : rescue.story || '';
-
-            const goalText = rescue.target_amount
+            const goal = rescue.target_amount
               ? `Goal: ${rescue.target_amount} ${rescue.currency || ''}`
               : '';
 
-            const { pct, label } = getProgress(rescue);
+            const snippet = rescue.story
+              ? rescue.story.length > 220
+                ? rescue.story.substring(0, 220) + '…'
+                : rescue.story
+              : '';
 
             return `
-              <article class="rescue-card">
+              <section class="spotlight style1 orient-left content-align-left image-position-center">
                 ${imgHtml}
-                <div class="rescue-card-body">
-                  <h3>
-                    ${escapeHtml(rescue.title || 'Rescue case')}
-                    <span class="rescue-status-badge rescue-status-badge--active">active</span>
-                  </h3>
-                  <div class="rescue-meta">
+                <div class="content">
+                  <h3>${rescue.title || 'Rescue case'}</h3>
+                  <p>
                     ${
                       rescue.animal_name
-                        ? `<strong>${escapeHtml(
-                            rescue.animal_name
-                          )}</strong> · `
+                        ? `<strong>${rescue.animal_name}</strong> · `
                         : ''
                     }
-                    ${escapeHtml(rescue.location || '')}
-                  </div>
-                  ${
-                    snippet
-                      ? `<p class="rescue-story">${escapeHtml(snippet)}</p>`
-                      : ''
-                  }
-
-                  <div class="progress-wrap">
-                    <div class="progress-header">
-                      <span>${goalText || 'Rescue goal'}</span>
-                      <span>${escapeHtml(label)}</span>
-                    </div>
-                    <div class="progress-bar">
-                      <div class="progress-fill" style="width: ${pct}%;"></div>
-                    </div>
-                  </div>
-                </div>
-                <div class="rescue-card-footer">
+                    ${rescue.location || ''}
+                  </p>
+                  ${goal ? `<p>${goal}</p>` : ''}
+                  ${snippet ? `<p>${snippet}</p>` : ''}
                   <ul class="actions stacked">
                     <li>
                       <a href="/Donate" class="button primary">
@@ -418,12 +227,10 @@
                     </li>
                   </ul>
                 </div>
-              </article>
+              </section>
             `;
           })
           .join('');
-
-        listEl.innerHTML = html;
       }
 
       document.addEventListener('DOMContentLoaded', loadActiveRescues);
