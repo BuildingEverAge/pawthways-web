@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
   <head>
-    <title>Pawthways — Watch & Help</title>
+    <title>Pawthways — Donate</title>
     <meta charset="utf-8" />
     <meta
       name="viewport"
@@ -13,24 +13,30 @@
     </noscript>
   </head>
   <body class="is-preload">
-    <!-- Wrapper -->
     <div id="wrapper" class="divided">
 
-      <!-- HERO -->
+
+      <!-- HERO / DONATION INTRO -->
       <section
+        id="donate-hero"
         class="banner style1 orient-left content-align-left image-position-right onload-image-fade-in onload-content-fade-right"
       >
         <div class="content">
-          <h1>Watch & Help</h1>
+          <h1>Turn Emotion Into Action</h1>
           <p class="major">
-            Real cases. Real animals. Transparent goals.
-            Every card below is powered directly from our rescue database —
-            no fake stories, no invisible money.
+            Your donation directly funds real animal rescues with complete
+            transparency. Every contribution creates a visible impact that you can
+            track and verify.
           </p>
           <ul class="actions stacked">
             <li>
-              <a href="/index.html" class="button smooth-scroll-middle">
-                Read the origin story
+              <a href="#how-it-works" class="button big wide smooth-scroll-middle">
+                How donations work
+              </a>
+            </li>
+            <li>
+              <a href="#active-rescues" class="button wide smooth-scroll-middle">
+                Support active rescues
               </a>
             </li>
           </ul>
@@ -38,91 +44,132 @@
         <div class="image">
           <img
             src="images/paw-hero.jpg"
-            alt="Pawthways rescue"
+            alt="Pawthways rescue mission"
           />
         </div>
       </section>
 
-      <!-- WATCH THE STORY & HELP -->
-      <section class="wrapper style1 align-center">
+
+      <!-- HOW IT WORKS -->
+      <section id="how-it-works" class="wrapper style1 align-center">
         <div class="inner">
-          <h2>Watch the Story & Help</h2>
+          <h2>How Donations Work</h2>
           <p>
-            Watching and sharing this story amplifies our reach and supports
-            our pledge to fund real rescues featured on Pawthways.
+            Pawthways operates with radical transparency. Here's exactly how your
+            contribution creates impact:
           </p>
-          <div
-            style="
-              position:relative;
-              padding-bottom:56.25%;
-              height:0;
-              overflow:hidden;
-              border-radius:16px;
-              max-width:960px;
-              margin:0 auto;
-            "
-          >
-            <iframe
-              src="https://www.youtube.com/embed/sRBxWGkS_bg?rel=0&modestbranding=1"
-              title="The Bottle That Carried Us — Pawthways"
-              frameborder="0"
-              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowfullscreen
-              style="
-                position:absolute;
-                top:0;
-                left:0;
-                width:100%;
-                height:100%;
-                border:0;
-              "
-            ></iframe>
+          <div class="items style1 medium onscroll-fade-in">
+            <section>
+              <h3>40% to Rescues</h3>
+              <p>
+                40% of net proceeds go directly to verified animal rescues.
+                Each rescue has clear goals and progress tracking you can follow.
+              </p>
+            </section>
+            <section>
+              <h3>60% to Operations</h3>
+              <p>
+                60% funds content production, platform maintenance, and team
+                operations that enable us to reach more people and save more lives.
+              </p>
+            </section>
+            <section>
+              <h3>Complete Transparency</h3>
+              <p>
+                Every transaction is logged. Every expense has proof. You can see
+                exactly how funds are used in our Transparency hub.
+              </p>
+            </section>
           </div>
         </div>
       </section>
 
-      <!-- ACTIVE RESCUES LIST (Supabase-powered) -->
+
+      <!-- DONATION METHODS -->
+      <section id="donation-methods" class="wrapper style2 align-center">
+        <div class="inner">
+          <h2>Choose Your Donation Method</h2>
+          <p>
+            We currently accept donations through these secure platforms:
+          </p>
+          <div class="items style1 medium onscroll-fade-in">
+            <section>
+              <h3>Stripe (Card)</h3>
+              <p>
+                Secure credit/debit card payments from anywhere in the world.
+                Fast, safe, and instant processing.
+              </p>
+              <ul class="actions stacked">
+                <li>
+                  <a href="#" class="button primary" id="stripe-donate">
+                    Donate with Card
+                  </a>
+                </li>
+              </ul>
+            </section>
+            <section>
+              <h3>Pix (Brazil)</h3>
+              <p>
+                Instant Brazilian transfers with zero fees. Perfect for our
+                Brazilian supporters.
+              </p>
+              <ul class="actions stacked">
+                <li>
+                  <a href="#" class="button" id="pix-donate">
+                    Donate with Pix
+                  </a>
+                </li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ACTIVE RESCUES SIDEBAR -->
       <section id="active-rescues" class="wrapper style1 align-center">
         <div class="inner">
-          <h2>Active Rescues You Can Help Now</h2>
+          <h2>Active Rescues Needing Support</h2>
           <p id="rescues-status">
-            Loading verified cases...
+            Loading current rescue cases...
           </p>
 
+
           <div id="rescues-list" class="items style1 medium">
-            <!-- Cards will be injected here by JS -->
+            <!-- Rescue cards will be injected here by JS -->
           </div>
         </div>
       </section>
 
-      <!-- WHY THIS MATTERS / CTA -->
+
+      <!-- TRANSPARENCY LINK -->
       <section class="wrapper style3 align-center">
         <div class="inner">
-          <h2>Why this matters</h2>
+          <h2>See Your Impact</h2>
           <p>
-            Pawthways connects emotional stories with verifiable impact.
-            When a rescue is funded or completed, you'll see it reflected here
-            and in our Transparency page.
+            Every donation matters, and every expense is documented. Visit our
+            Transparency hub to see exactly how contributions are used.
           </p>
           <ul class="actions stacked">
             <li>
-              <a href="#active-rescues" class="button primary">
-                Support the next rescue
+              <a href="transparency.html" class="button primary">
+                View Transparency Records
               </a>
             </li>
             <li>
-              <a href="/index.html" class="button">
-                Relive the Pawthways story
+              <a href="watch-and-help.html" class="button">
+                Back to Watch & Help
               </a>
             </li>
             <li>
-              <a href="/transparency.html" class="button">
-                See Transparency
+              <a href="index.html" class="button">
+                Read the Origin Story
               </a>
             </li>
           </ul>
         </div>
       </section>
+
 
       <!-- FOOTER -->
       <footer class="wrapper style1 align-center">
@@ -130,12 +177,12 @@
           <p>Pawthways — Turning one leap into thousands of second chances.</p>
         </div>
       </footer>
+
+
     </div>
 
-    <!-- Supabase JS -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 
-    <!-- Template JS -->
+    <!-- Scripts -->
     <script src="assets/js/jquery.min.js"></script>
     <script src="assets/js/jquery.scrollex.min.js"></script>
     <script src="assets/js/jquery.scrolly.min.js"></script>
@@ -144,35 +191,33 @@
     <script src="assets/js/util.js"></script>
     <script src="assets/js/main.js"></script>
 
+
+    <!-- Supabase JS -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+
+
     <!-- Pawthways: Load active rescues from Supabase -->
     <script>
-      // Helper function to calculate progress
-      function calculateProgress(rescue) {
-        if (!rescue.target_amount) return null;
-        
-        return {
-          target_amount: rescue.target_amount,
-          currency: rescue.currency || '',
-          total_donated: null, // Unknown until Phase 2
-          progress_pct: null // Unknown until Phase 2
-        };
-      }
-
       const SUPABASE_URL = 'https://fjlonwabqmbzkprddqsv.supabase.co';
       const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbG9ud2FicW1iemtwcmRkcXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MDY3ODEsImV4cCI6MjA3ODM4Mjc4MX0.jBnyGnIhmAUFGg0RL8sw-5L8tBAgiJM5s-AXuHPtMuU';
+
 
       const supabaseClient = supabase.createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY
       );
 
+
       async function loadActiveRescues() {
         const statusEl = document.getElementById('rescues-status');
         const listEl = document.getElementById('rescues-list');
 
+
         if (!statusEl || !listEl) return;
 
-        statusEl.textContent = 'Loading verified cases...';
+
+        statusEl.textContent = 'Loading current rescue cases...';
+
 
         const { data, error } = await supabaseClient
           .from('rescues')
@@ -180,7 +225,9 @@
             'id, title, animal_name, location, target_amount, currency, status, image_url, story, created_at'
           )
           .eq('status', 'active')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(3); // Show only 3 on donate page
+
 
         if (error) {
           console.error('Error loading rescues:', error);
@@ -189,13 +236,16 @@
           return;
         }
 
+
         if (!data || data.length === 0) {
           statusEl.textContent =
             'No active rescues at this moment — check back soon.';
           return;
         }
 
+
         statusEl.textContent = '';
+
 
         listEl.innerHTML = data
           .map((rescue) => {
@@ -206,44 +256,18 @@
               </div>`
               : '';
 
+
             const goal = rescue.target_amount
               ? `Goal: ${rescue.target_amount} ${rescue.currency || ''}`
               : '';
 
+
             const snippet = rescue.story
-              ? rescue.story.length > 220
-                ? rescue.story.substring(0, 220) + '…'
+              ? rescue.story.length > 150
+                ? rescue.story.substring(0, 150) + '…'
                 : rescue.story
               : '';
 
-            // Calculate progress
-            const progress = calculateProgress(rescue);
-            const progressHtml = progress ? `
-              <div class="progress-container" style="margin: 1rem 0;">
-                <div class="progress-info" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
-                  <span>Goal: ${progress.target_amount} ${progress.currency}</span>
-                  <span style="color: #666; font-style: italic;">Tracking coming soon</span>
-                </div>
-                <div class="progress-bar" style="
-                  width: 100%;
-                  height: 8px;
-                  background-color: #f0f0f0;
-                  border-radius: 4px;
-                  overflow: hidden;
-                ">
-                  <div class="progress-fill" style="
-                    width: 0%;
-                    height: 100%;
-                    background-color: #E2574C;
-                    transition: width 0.3s ease;
-                  "></div>
-                </div>
-              </div>
-            ` : `
-              <div class="progress-container" style="margin: 1rem 0;">
-                <p style="font-size: 0.9rem; color: #666;">Goal not defined yet</p>
-              </div>
-            `;
 
             return `
               <section class="spotlight style1 orient-left content-align-left image-position-center">
@@ -259,12 +283,11 @@
                     ${rescue.location || ''}
                   </p>
                   ${goal ? `<p>${goal}</p>` : ''}
-                  ${progressHtml}
                   ${snippet ? `<p>${snippet}</p>` : ''}
                   <ul class="actions stacked">
                     <li>
-                      <a href="donate.html#donation-methods" class="button primary">
-                        Help this rescue
+                      <a href="#donation-methods" class="button primary">
+                        Support this rescue
                       </a>
                     </li>
                   </ul>
@@ -275,7 +298,9 @@
           .join('');
       }
 
+
       document.addEventListener('DOMContentLoaded', loadActiveRescues);
     </script>
   </body>
 </html>
+

@@ -30,7 +30,7 @@
           <ul class="actions stacked">
             <li>
               <a href="/watch-and-help.html" class="button">
-                Back to Watch &amp; Help
+                Back to Watch & Help
               </a>
             </li>
           </ul>
@@ -40,6 +40,35 @@
             src="images/paw-transparency.jpg"
             alt="Pawthways transparency"
           />
+        </div>
+      </section>
+
+      <!-- PAWTHWAYS TRANSPARENCY KPIs -->
+      <section id="kpis" class="wrapper style1 align-center">
+        <div class="inner">
+          <h2>Pawthways Transparency KPIs</h2>
+          <p id="kpis-status">
+            Loading live stats…
+          </p>
+
+          <div class="items style1 medium onscroll-fade-in">
+            <section>
+              <h3>Total Donated</h3>
+              <p id="total-donated">Loading…</p>
+            </section>
+            <section>
+              <h3>Total Rescues</h3>
+              <p id="total-rescues">Loading…</p>
+            </section>
+            <section>
+              <h3>Funded Rescues</h3>
+              <p id="funded-rescues">Loading…</p>
+            </section>
+          </div>
+
+          <p id="last-updated" style="margin-top: 1.5rem; font-size: 0.9rem; opacity: 0.85;">
+            Last updated: Loading…
+          </p>
         </div>
       </section>
 
@@ -111,13 +140,78 @@
       }
 
       function escapeHtml(str) {
-        if (!str) return "";
-        return String(str)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
+       if (!str) return "";
+       return String(str)
+         .replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#039;");
+      }
+
+
+      // Pawthways: Load KPIs from public_stats_view
+      async function loadKPIs() {
+        const kpisStatusEl = document.getElementById('kpis-status');
+        const totalDonatedEl = document.getElementById('total-donated');
+        const totalRescuesEl = document.getElementById('total-rescues');
+        const fundedRescuesEl = document.getElementById('funded-rescues');
+        const lastUpdatedEl = document.getElementById('last-updated');
+
+        if (!kpisStatusEl || !totalDonatedEl || !totalRescuesEl || !fundedRescuesEl || !lastUpdatedEl) {
+          return;
+        }
+
+        kpisStatusEl.textContent = 'Loading live stats…';
+
+        try {
+          const { data, error } = await supabaseClient
+            .from('public_stats_view')
+            .select('*')
+            .single();
+
+          if (error) {
+            console.error('Error loading KPIs:', error);
+            kpisStatusEl.textContent = 'We could not load stats right now. Transparency logs are still available below.';
+            return;
+          }
+
+          if (!data) {
+            kpisStatusEl.textContent = 'Stats coming soon — transparency logs below are still live.';
+            totalDonatedEl.textContent = '0';
+            totalRescuesEl.textContent = '0';
+            fundedRescuesEl.textContent = '0';
+            lastUpdatedEl.textContent = 'Never';
+            return;
+          }
+
+          // Display KPIs
+          kpisStatusEl.textContent = '';
+          totalDonatedEl.textContent = data.total_donated || '0';
+          totalRescuesEl.textContent = data.total_rescues || '0';
+          fundedRescuesEl.textContent = data.funded_rescues || '0';
+          
+          // Format last updated timestamp
+          const lastUpdated = data.last_update_at;
+          if (lastUpdated) {
+            const d = new Date(lastUpdated);
+            if (!isNaN(d.getTime())) {
+              lastUpdatedEl.textContent = d.toLocaleDateString('en-GB', {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit'
+              });
+            } else {
+              lastUpdatedEl.textContent = lastUpdated;
+            }
+          } else {
+            lastUpdatedEl.textContent = 'Never';
+          }
+
+        } catch (err) {
+          console.error('KPIs loading error:', err);
+          kpisStatusEl.textContent = 'We could not load stats right now. Transparency logs are still available below.';
+        }
       }
 
       async function loadTransparency() {
@@ -248,7 +342,10 @@
         }
       }
 
-      document.addEventListener("DOMContentLoaded", loadTransparency);
+      document.addEventListener('DOMContentLoaded', function () {
+        loadKPIs();
+        loadTransparency();
+      });
     </script>
   </body>
 </html>
