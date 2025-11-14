@@ -122,7 +122,7 @@
 
     <!-- Pawthways: Transparency logic -->
     <script>
-      // TODO: put the SAME values you use in watch-and-help.html
+      // TODO: put SAME values you use in watch-and-help.html
       const SUPABASE_URL = "https://fjlonwabqmbzkprddqsv.supabase.co";
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbG9ud2FicW1iemtwcmRkcXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MDY3ODEsImV4cCI6MjA3ODM4Mjc4MX0.jBnyGnIhmAUFGg0RL8sw-5L8tBAgiJM5s-AXuHPtMuU";
 
@@ -142,10 +142,10 @@
       function escapeHtml(str) {
        if (!str) return "";
        return String(str)
-         .replace(/&/g, "&amp;")
-         .replace(/</g, "&lt;")
-         .replace(/>/g, "&gt;")
-         .replace(/"/g, "&quot;")
+         .replace(/&/g, "&")
+         .replace(/</g, "<")
+         .replace(/>/g, ">")
+         .replace(/"/g, """)
          .replace(/'/g, "&#039;");
       }
 
@@ -229,8 +229,8 @@
 
         // --- Fetch transparency logs ---
         const { data: logs, error: logsError } = await supabaseClient
-          .from("transparency_logs")
-          .select("id, rescue_id, type, description, file_url, created_at")
+          .from("public_transparency_view")
+          .select("log_id, rescue_id, rescue_title, type, description, amount, currency, file_url, created_at")
           .order("created_at", { ascending: false })
           .limit(24);
 
@@ -240,7 +240,7 @@
             "We could not load transparency logs right now. Please try again later.";
         } else if (!logs || logs.length === 0) {
           logsStatusEl.textContent =
-            "No transparency logs have been published yet — they will appear here as soon as we start the first campaigns.";
+            "No transparency logs have been published yet — they will appear here as soon as we start first campaigns.";
         } else {
           logsStatusEl.textContent = "";
           logsListEl.innerHTML = logs
@@ -263,6 +263,10 @@
                 ? `<p><small>Linked rescue: <code>${escapeHtml(rescueId)}</code></small></p>`
                 : "";
 
+              const amountText = (log.amount != null && log.currency)
+                ? `<p><small>Amount: ${log.amount} ${escapeHtml(log.currency)}</small></p>`
+                : "";
+
               return `
                 <section class="spotlight style1 orient-left content-align-left image-position-center">
                   <div class="content">
@@ -270,6 +274,7 @@
                     <p>
                       ${description || "<em>No description provided.</em>"}
                     </p>
+                    ${amountText}
                     ${linkHtml}
                     ${rescueHtml}
                     <p><small>${dateStr || ""}</small></p>
@@ -282,9 +287,9 @@
 
         // --- Fetch funded rescues snapshot ---
         const { data: fundedRescues, error: fundedError } = await supabaseClient
-          .from("rescues")
+          .from("public_rescue_view")
           .select(
-            "id, title, animal_name, location, image_url, target_amount, currency, status, created_at"
+            "id, title, animal_name, location, image_url, target_amount, currency, status, created_at, total_donated, progress_pct"
           )
           .eq("status", "funded")
           .order("created_at", { ascending: false })

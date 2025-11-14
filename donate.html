@@ -220,9 +220,9 @@
 
 
         const { data, error } = await supabaseClient
-          .from('rescues')
+          .from('public_rescue_view')
           .select(
-            'id, title, animal_name, location, target_amount, currency, status, image_url, story, created_at'
+            'id, title, animal_name, location, target_amount, currency, status, image_url, story, created_at, total_donated, progress_pct'
           )
           .eq('status', 'active')
           .order('created_at', { ascending: false })
@@ -303,4 +303,3 @@
     </script>
   </body>
 </html>
-
