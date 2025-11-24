@@ -1,6 +1,6 @@
 // /api/rescues.js
-// Implementación usando la REST API de Supabase para evitar dependencias.
-// Requiere: SUPABASE_URL (ej: https://xxxx.supabase.co) y SUPABASE_SERVICE_KEY en env vars.
+// Implementación usando la REST API de Supabase para 0 dependencias.
+// Requiere: SUPABASE_URL y SUPABASE_SERVICE_KEY en las env vars.
 
 export default async function handler(req, res) {
   try {
@@ -12,18 +12,23 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Server misconfiguration' });
     }
 
-    // Construye la URL REST para la view/table public_rescue_view
-    // Selecciona las columnas necesarias (encodeURI por seguridad).
-    const select = encodeURIComponent('id,title,animal_name,location,target_amount,currency,status,image_url,story,total_donated,progress_pct,created_at');
-    const url = ${SUPABASE_URL}/rest/v1/public_rescue_view?select=${select}&status=eq.active&order=created_at.desc;
+    // Selección de columnas
+    const select = encodeURIComponent(
+      'id,title,animal_name,location,target_amount,currency,status,image_url,story,total_donated,progress_pct,created_at'
+    );
 
-    // Llamada REST. Usamos Service Role Key en Authorization (backend seguro).
+    // URL REST → lee desde la view public_rescue_view
+    const url =
+      ${SUPABASE_URL}/rest/v1/public_rescue_view? +
+      select=${select}&status=eq.active&order=created_at.desc;
+
+    // Fetch a Supabase REST API
     const resp = await fetch(url, {
       method: 'GET',
       headers: {
         apikey: SERVICE_KEY,
         Authorization: Bearer ${SERVICE_KEY},
-        'Accept': 'application/json'
+        Accept: 'application/json'
       }
     });
 
@@ -35,8 +40,8 @@ export default async function handler(req, res) {
 
     const data = await resp.json();
 
-    // Normaliza/limpia
-    const cleaned = (Array.isArray(data) ? data : []).map(r => ({
+    // Normalización
+    const cleaned = (Array.isArray(data) ? data : []).map((r) => ({
       id: r.id,
       title: r.title ?? '',
       animal_name: r.animal_name ?? '',
@@ -50,11 +55,18 @@ export default async function handler(req, res) {
       created_at: r.created_at ?? null
     }));
 
-    // Cache short time at CDN
-    res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=60');
+    // CDN cache
+    res.setHeader(
+      'Cache-Control',
+      'public, s-maxage=60, stale-while-revalidate=60'
+    );
+
     return res.status(200).json(cleaned);
   } catch (err) {
-    console.error('Handler error:', err && (err.stack  err.message  err));
+    console.error(
+      'Handler error:',
+      err && (err.stack  err.message  JSON.stringify(err))
+    );
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
