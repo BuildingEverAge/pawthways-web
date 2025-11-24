@@ -89,7 +89,7 @@
             Loading verified cases...
           </p>
 
-          <div id="rescues-list" class="items style1 medium">
+          <div id="rescues-list"></div>
             <!-- Cards will be injected here by JS -->
           </div>
         </div>
@@ -174,11 +174,8 @@
     let data;
 
     try {
-      const SUPABASE_FUNCTION_URL = 'https://fjlonwabqmbzkprddqsv.supabase.co/functions/v1/rescues';
-
-      const resp = await fetch(SUPABASE_FUNCTION_URL, { cache: 'no-cache' });
-      if (!resp.ok) throw new Error('Network response was not ok: ' + resp.status);
-
+      const resp = await fetch('/api/rescues', { cache: 'no-cache' });
+      if (!resp.ok) throw new Error('Network response error: ' + resp.status);
       data = await resp.json();
     } catch (err) {
       console.error('Error loading rescues:', err);
