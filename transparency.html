@@ -11,6 +11,27 @@
     <noscript>
       <link rel="stylesheet" href="assets/css/noscript.css" />
     </noscript>
+    <!-- Status badges for transparency logs -->
+    <style>
+      .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 0.5rem;
+      }
+      .badge-verified {
+        background-color: #10b981;
+        color: white;
+      }
+      .badge-pending {
+        background-color: #f59e0b;
+        color: white;
+      }
+    </style>
   </head>
   <body class="is-preload">
     <!-- Wrapper -->
@@ -109,7 +130,7 @@
     </div>
 
     <!-- Supabase JS -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
 
     <!-- Template JS -->
     <script src="assets/js/jquery.min.js"></script>
@@ -124,7 +145,7 @@
     <script>
       // TODO: put SAME values you use in watch-and-help.html
       const SUPABASE_URL = "https://fjlonwabqmbzkprddqsv.supabase.co";
-      const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbG9ud2FicW1iemtwcmRkcXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MDY3ODEsImV4cCI6MjA3ODM4Mjc4MX0.jBnyGnIhmAUFGg0RL8sw-5L8tBAgiJM5s-AXuHPtMuU";
+      const SUPABASE_ANON_KEY = "";
 
       const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -139,15 +160,16 @@
         });
       }
 
-      function escapeHtml(str) {
-       if (!str) return "";
-       return String(str)
-         .replace(/&/g, "&")
-         .replace(/</g, "<")
-         .replace(/>/g, ">")
-         .replace(/"/g, """)
-         .replace(/'/g, "&#039;");
-      }
+     // Secure HTML escaping to prevent XSS attacks
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 
       // Pawthways: Load KPIs from public_stats_view
@@ -253,6 +275,11 @@
 
               const typeLabel = type.charAt(0).toUpperCase() + type.slice(1);
 
+              // Badge logic: Show "Verified" if file_url exists, "Pending" otherwise
+              const badgeHtml = fileUrl 
+                ? `<span class="badge badge-verified">Verified</span>`
+                : `<span class="badge badge-pending">Pending</span>`;
+
               const linkHtml = fileUrl
                 ? `<p><a href="${fileUrl}" target="_blank" rel="noopener noreferrer">
                      View proof / file
@@ -271,6 +298,7 @@
                 <section class="spotlight style1 orient-left content-align-left image-position-center">
                   <div class="content">
                     <h3>${typeLabel}</h3>
+                    ${badgeHtml}
                     <p>
                       ${description || "<em>No description provided.</em>"}
                     </p>
