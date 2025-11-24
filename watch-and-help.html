@@ -174,8 +174,11 @@
     let data;
 
     try {
-      const resp = await fetch('/api/rescues', { cache: 'no-cache' });
-      if (!resp.ok) throw new Error('Network response error: ' + resp.status);
+      const SUPABASE_FUNCTION_URL = 'https://fjlonwabqmbzkprddqsv.supabase.co/functions/v1/rescues';
+
+      const resp = await fetch(SUPABASE_FUNCTION_URL, { cache: 'no-cache' });
+      if (!resp.ok) throw new Error('Network response was not ok: ' + resp.status);
+
       data = await resp.json();
     } catch (err) {
       console.error('Error loading rescues:', err);
