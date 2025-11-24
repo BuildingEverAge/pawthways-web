@@ -131,10 +131,6 @@
         </div>
       </footer>
     </div>
-
-    <!-- Supabase JS -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
-
     <!-- Template JS -->
     <script src="assets/js/jquery.min.js"></script>
     <script src="assets/js/jquery.scrollex.min.js"></script>
@@ -146,150 +142,109 @@
 
     <!-- Pawthways: Load active rescues from Supabase -->
     <script>
-      // Helper function to calculate progress
-      function calculateProgress(rescue) {
-        if (!rescue.target_amount) return null;
+  function escapeHtml(unsafe) {
+    if (unsafe == null) return '';
+    return String(unsafe)
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'","&#039;");
+  }
 
-        const target = Number(rescue.target_amount) || 0;
-        const donated = rescue.total_donated != null ? Number(rescue.total_donated) : 0;
+  function calculateProgress(rescue) {
+    const target = Number(rescue.target_amount || 0);
+    const donated = Number(rescue.total_donated || 0);
+    let pct = target > 0 ? Math.round((donated / target) * 100) : 0;
+    pct = Math.max(0, Math.min(100, pct));
+    return {
+      progress_pct: pct,
+      total_donated: donated,
+      currency: rescue.currency || ''
+    };
+  }
 
-        let pct;
-        if (rescue.progress_pct != null) {
-          pct = Number(rescue.progress_pct);
-        } else if (target > 0) {
-          pct = Math.round((donated / target) * 100);
-        } else {
-          pct = 0;
-        }
+  async function loadActiveRescues() {
+    const statusEl = document.getElementById('rescues-status');
+    const listEl = document.getElementById('rescues-list');
+    if (!statusEl || !listEl) return;
 
-        if (!isFinite(pct)) pct = 0;
-        pct = Math.max(0, Math.min(100, pct));
+    statusEl.textContent = 'Loading verified cases...';
 
-        return {
-          target_amount: target,
-          currency: rescue.currency || '',
-          total_donated: donated,
-          progress_pct: pct
-        };
-      }
+    let data;
 
-      const SUPABASE_URL = 'https://fjlonwabqmbzkprddqsv.supabase.co';
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbG9ud2FicW1iemtwcmRkcXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MDY3ODEsImV4cCI6MjA3ODM4Mjc4MX0.jBnyGnIhmAUFGg0RL8sw-5L8tBAgiJM5s-AXuHPtMuU';
+    try {
+      const SUPABASE_FUNCTION_URL = 'https://fjlonwabqmbzkprddqsv.supabase.co/functions/v1/rescues';
 
-      const supabaseClient = supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_ANON_KEY
-      );
+      const resp = await fetch(SUPABASE_FUNCTION_URL, { cache: 'no-cache' });
+      if (!resp.ok) throw new Error('Network response was not ok: ' + resp.status);
 
-      async function loadActiveRescues() {
-        const statusEl = document.getElementById('rescues-status');
-        const listEl = document.getElementById('rescues-list');
+      data = await resp.json();
+    } catch (err) {
+      console.error('Error loading rescues:', err);
+      statusEl.innerHTML = 'We could not load rescues right now. <button id="retry-rescues" class="button">Reintentar</button>';
+      document.getElementById('retry-rescues')?.addEventListener('click', loadActiveRescues);
+      return;
+    }
 
-        if (!statusEl || !listEl) return;
+    if (!data || data.length === 0) {
+      statusEl.textContent = 'No active rescues at this moment — check back soon.';
+      listEl.innerHTML = '';
+      return;
+    }
 
-        statusEl.textContent = 'Loading verified cases...';
+    statusEl.textContent = '';
 
-        const { data, error } = await supabaseClient
-          .from('public_rescue_view')
-          .select(
-            'id, title, animal_name, location, target_amount, currency, status, image_url, story, created_at, total_donated, progress_pct'
-          )
-          .eq('status', 'active')
-          .order('created_at', { ascending: false });
+    listEl.innerHTML = data
+      .map((rescue) => {
+        const imgHtml = rescue.image_url
+          ? `<div class="image"><img loading="lazy" src="${escapeHtml(rescue.image_url)}" alt="${escapeHtml(rescue.title || 'Rescue case')}" /></div>`
+          : '';
 
-        if (error) {
-          console.error('Error loading rescues:', error);
-          statusEl.textContent =
-            'We could not load rescues right now. Please try again in a moment.';
-          return;
-        }
+        const goal = rescue.target_amount
+          ? `Goal: ${escapeHtml(String(rescue.target_amount))} ${escapeHtml(rescue.currency)}`
+          : '';
 
-        if (!data || data.length === 0) {
-          statusEl.textContent =
-            'No active rescues at this moment — check back soon.';
-          return;
-        }
+        const snippet = rescue.story
+          ? (rescue.story.length > 220
+              ? escapeHtml(rescue.story.substring(0, 220)) + '…'
+              : escapeHtml(rescue.story))
+          : '';
 
-        statusEl.textContent = '';
+        const progress = calculateProgress(rescue);
 
-        listEl.innerHTML = data
-          .map((rescue) => {
-            const imgHtml = rescue.image_url
-              ? `
-              <div class="image">
-                <img src="${rescue.image_url}" alt="${rescue.title || 'Rescue case'}" />
-              </div>`
-              : '';
+        const progressHtml = `
+          <div class="progress-container">
+            <div class="progress-info">
+              <span>Donated: ${progress.total_donated.toFixed(2)} ${escapeHtml(progress.currency)}</span>
+              <span>${progress.progress_pct}% funded</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width:${progress.progress_pct}%;"></div>
+            </div>
+          </div>
+        `;
 
-            const goal = rescue.target_amount
-              ? `Goal: ${rescue.target_amount} ${rescue.currency || ''}`
-              : '';
+        return `
+          <section class="spotlight style1 orient-left content-align-left image-position-center">
+            ${imgHtml}
+            <div class="content">
+              <h3>${escapeHtml(rescue.title)}</h3>
+              <p>${rescue.animal_name ? `<strong>${escapeHtml(rescue.animal_name)}</strong> · ` : ''}${escapeHtml(rescue.location)}</p>
+              ${goal ? `<p>${goal}</p>` : ''}
+              ${progressHtml}
+              ${snippet ? `<p>${snippet}</p>` : ''}
+              <ul class="actions stacked">
+                <li><a href="donate.html#donation-methods" class="button primary">Help this rescue</a></li>
+              </ul>
+            </div>
+          </section>
+        `;
+      })
+      .join('');
+  }
 
-            const snippet = rescue.story
-              ? rescue.story.length > 220
-                ? rescue.story.substring(0, 220) + '…'
-                : rescue.story
-              : '';
-
-            // Calculate progress
-            const progress = calculateProgress(rescue);
-            const progressHtml = progress ? 
-              `<div class="progress-container" style="margin: 1rem 0;">
-                <div class="progress-info" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
-                  <span>Donated: ${progress.total_donated.toFixed(2)} ${progress.currency}</span>
-                  <span>${progress.progress_pct}% funded</span>
-                </div>
-                <div class="progress-bar" style="
-                  width: 100%;
-                  height: 8px;
-                  background-color: #f0f0f0;
-                  border-radius: 4px;
-                  overflow: hidden;
-                ">
-                  <div class="progress-fill" style="
-                    width: ${progress.progress_pct}%;
-                    height: 100%;
-                    background-color: #E2574C;
-                    transition: width 0.3s ease;
-                  "></div>
-                </div>
-              </div>` 
-            : 
-              `<div class="progress-container" style="margin: 1rem 0;">
-                <p style="font-size: 0.9rem; color: #666;">Goal not defined yet</p>
-              </div>`;
-
-            return `
-              <section class="spotlight style1 orient-left content-align-left image-position-center">
-                ${imgHtml}
-                <div class="content">
-                  <h3>${rescue.title || 'Rescue case'}</h3>
-                  <p>
-                    ${
-                      rescue.animal_name
-                        ? `<strong>${rescue.animal_name}</strong> · `
-                        : ''
-                    }
-                    ${rescue.location || ''}
-                  </p>
-                  ${goal ? `<p>${goal}</p>` : ''}
-                  ${progressHtml}
-                  ${snippet ? `<p>${snippet}</p>` : ''}
-                  <ul class="actions stacked">
-                    <li>
-                      <a href="donate.html#donation-methods" class="button primary">
-                        Help this rescue
-                      </a>
-                    </li>
-                  </ul>
-                </div>
-              </section>
-            `;
-          })
-          .join('');
-      }
-
-      document.addEventListener('DOMContentLoaded', loadActiveRescues);
-    </script>
+  document.addEventListener('DOMContentLoaded', loadActiveRescues);
+</script>
   </body>
 </html>
