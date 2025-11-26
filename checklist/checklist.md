@@ -46,18 +46,70 @@
 
 ## ⭐ **BLOCK 2 — TRANSPARENCY + WATCH & HELP**
 
-### ✔️ 2.1 — watch-and-help.html
-- [x] Fetch active rescues from Supabase ✅
-- [x] Goal displayed on each card ✅
-- [x] Story snippet truncated ✅
-- [x] **Placeholder progress bar (0%)** ❌ **¡ACTUALIZACIÓN! Tiene barra de progreso REAL con porcentajes**
-- [x] CTA: "Help this rescue" ✅
-- [x] Global CTA: "Support the next rescue" ✅
-- [x] YouTube embed working ✅
-- [x] All internal links fixed ✅
-- [x] Verified by Cline ✅
-- [ ] Switch fetch to public_rescue_view when created ❓ **¡ACTUALIZACIÓN! Ya está usando public_rescue_view**
-- [ ] Enable real progress (total_donated) once donations exist ✅ **¡ACTUALIZACIÓN! Ya implementado**
+
+✅ CHECKLIST COMPLETA — WATCH & HELP (Estado Actual)
+🟩 1. Backend / Supabase
+[x] Función deployada correctamente (functions/rescues)
+[x] Función sin anon key, segura
+[x] Función usa public_rescue_view internamente
+[x] CORS funcionando sin errores
+[x] Datos llegan limpios y fiables
+[x] Rescates completados (progress=100%) ya no se muestran
+
+🟩 2. Frontend — watch-and-help.html
+Estructura / contenido
+[x] Fetch correcto desde Supabase
+[x] Rescates cargan sin errores
+[x] Imagen mostrada arriba en móvil y desktop
+[x] Título, animal name, location, goal → OK
+[x] Snippet con límite de caracteres → OK
+[x] Botón “Help this rescue” funcionando
+[x] Layout responsivo (desktop y móvil)
+[x] Container central para todas las cartas
+[x] Ninguna key filtrada → 100% seguro
+Sistema de cartas dinámicas
+[x] Máximo visible simultáneo = 4
+[x] Cola interna (rescueQueue) funcionando
+[x] Cuando una carta desaparece, entra la siguiente
+[x] Auto-sweep cada 1 segundo
+[x] Desaparece SÓLO la carta al 100%
+[x] DOM limpio, sin duplicados
+[x] Se actualiza sin recargar la página
+
+🟩 3. CSS / Layout
+[x] Cartas perfectamente cuadradas
+[x] Imagen arriba siempre
+[x] Sin separación rara ni estiramientos
+[x] Grilla de 2 columnas desktop / 1 en móvil
+[x] Sin conflictos con spotlight viejo
+[x] Estilos consistentes con template
+
+🟩 4. Performance
+[x] Fetch sin cache → datos siempre actualizados
+[x] Limpieza automática de cartas completas
+[x] No hay límites globales → se muestra lo que exista
+[x] Animación pendiente (no afecta rendimiento)
+
+❗️ Pendientes opcionales (si tú quieres mejorarlo)
+🟨 Estética y UX
+[ ] Añadir animación suave cuando una carta desaparece
+[ ] Añadir “skeleton loading” mientras carga
+[ ] Suavizar transiciones del grid
+🟨 Futuro backend
+[ ] Mover donaciones a un sistema real (Stripe / Crypto payments)
+[ ] Añadir transparencia por ID (cada rescue con su página)
+
+🟢 RESUMEN RAPIDÍSIMO (versión mini)
+✔️ Todo lo importante está hecho.
+ ✔️ Las cartas cargan perfecto.
+ ✔️ La cola funciona.
+ ✔️ Se eliminan automáticamente.
+ ✔️ Responsive está bien.
+ ✔️ Código estable.
+ ✔️ Nada roto.
+Te queda solamente animar la desaparición, si quieres más polish.
+
+
 
 ✔️ 2.2 — transparency.html
 
