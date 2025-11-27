@@ -1,0 +1,19 @@
+name: Daily allocate
+on:
+  schedule:
+    - cron: '0 1 * * *' # daily 01:00 UTC — ajusta si quieres
+  workflow_dispatch: {}
+
+jobs:
+  allocate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call allocate endpoint
+        env:
+          ALLOCATE_URL: ${{ secrets.ALLOCATE_URL }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+        run: |
+          echo "Calling allocate..."
+          curl -s -X POST "$ALLOCATE_URL" -H "x-admin-token: $ADMIN_TOKEN" -o /tmp/allocate_resp.json || true
+          echo "Response:"
+          cat /tmp/allocate_resp.json || true
