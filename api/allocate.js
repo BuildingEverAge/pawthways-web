@@ -74,31 +74,46 @@ console.log("LOG-3 candidates_ids:", candidates.map(c => c.id));
     console.log(`Prepared inserts for ${inserts.length} sales`);
 
     // 5) intentar batch insert
-    const { data: inserted, error: insertErr } = await supa
-      .from('donations')
-      .insert(inserts, { returning: 'representation' });
+const { data: inserted, error: insertErr } = await supa
+  .from('donations')
+  .insert(inserts, { returning: 'representation' });
 
-    let results = inserted || [];
+// LOG extra para debug
+console.log('INSERT: batch returned inserted length:', Array.isArray(inserted) ? inserted.length : String(inserted));
+console.log('INSERT: batch inserted sample:', (Array.isArray(inserted) && inserted[0]) ? inserted[0] : inserted);
+console.log('INSERT: batch insertErr:', insertErr);
 
-    if (insertErr) {
-      console.warn('Batch insert failed, falling back to single inserts:', insertErr);
-      // fallback one-by-one
-      results = [];
-      for (const row of inserts) {
-        try {
-          const { data: d, error: e } = await supa
-            .from('donations')
-            .insert([row], { returning: 'representation' });
-          if (e) {
-            console.warn('Insert one failed for sale', row.sale_id, e.message || e);
-            continue;
-          }
-          if (Array.isArray(d) && d[0]) results.push(d[0]);
-        } catch (e) {
-          console.error('Insert single error', e);
-        }
+let results = inserted || [];
+
+if (insertErr) {
+  console.warn('Batch insert failed, falling back to single inserts:', insertErr);
+}
+
+// fallback one-by-one (mejor logado)
+if ((!Array.isArray(inserted) || inserted.length === 0) && (!insertErr)) {
+  // caso raro: no error pero tampoco data
+  console.warn('Batch insert returned no rows and no error — will try one-by-one fallback.');
+}
+
+if ((!Array.isArray(inserted)  inserted.length === 0)  insertErr) {
+  results = [];
+  for (const row of inserts) {
+    try {
+      const { data: d, error: e } = await supa
+        .from('donations')
+        .insert([row], { returning: 'representation' });
+
+      console.log('INSERT: single insert returned data:', d, 'error:', e);
+      if (e) {
+        console.warn('Insert one failed for sale', row.sale_id, e.message || e);
+        continue;
       }
+      if (Array.isArray(d) && d[0]) results.push(d[0]);
+    } catch (e) {
+      console.error('Insert single error (unexpected)', e, 'row=', row);
     }
+  }
+}
 
     // 6) AUDIT: insertar filas en audit_donations_log (verboso + fallback)
 if (results.length) {
