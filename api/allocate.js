@@ -23,6 +23,8 @@ export default async function handler(req, res) {
       .from('sales')
       .select('id, amount, currency')
       .limit(1000);
+      console.log("LOG-1 sales_fetched:", Array.isArray(sales) ? sales.length : "null");
+console.log("LOG-1 sales_ids:", sales?.map(s => s.id));
 
     if (salesErr) {
       console.error('Error fetching sales', salesErr);
@@ -45,9 +47,13 @@ export default async function handler(req, res) {
       throw dErr;
     }
     const donatedSaleIds = new Set((existingDonations || []).map(d => String(d.sale_id)));
+    console.log("LOG-2 donations_found:", existingDonations?.length || 0);
+console.log("LOG-2 donated_ids:", [...donatedSaleIds]);
 
     // 3) candidatos
     const candidates = sales.filter(s => !donatedSaleIds.has(String(s.id)));
+    console.log("LOG-3 candidates_count:", candidates.length);
+console.log("LOG-3 candidates_ids:", candidates.map(c => c.id));
     if (!candidates.length) {
       console.log('No unallocated sales found.');
       return res.status(200).json({ processed: 0, total_allocated: 0 });
