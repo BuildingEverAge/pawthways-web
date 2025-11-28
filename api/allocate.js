@@ -74,77 +74,35 @@ export default async function handler(req, res) {
 
     console.log(`Prepared inserts for ${inserts.length} sales`);
 
-    // 5) intentar batch insert
-    const { data: inserted, error: insertErr } = await supa
-      .from('donations')
-      .insert(inserts, { returning: 'representation' });
+    // 5) intentar upsert (idempotente) — evita 23505 race conflicts
+let inserted = null;
+let insertErr = null;
 
-    // LOG extra para debug
-    console.log('INSERT: batch returned inserted length:', Array.isArray(inserted) ? inserted.length : String(inserted));
-    console.log('INSERT: batch inserted sample:', (Array.isArray(inserted) && inserted[0]) ? inserted[0] : inserted);
-    console.log('INSERT: batch insertErr:', insertErr);
+try {
+  // usar upsert con onConflict sale_id para que sea idempotente
+  const upsertResp = await supa
+    .from('donations')
+    .upsert(inserts, { onConflict: 'sale_id', returning: 'representation' });
 
-    let results = inserted || [];
+  // En algunas versiones de supabase-js upsert devuelve { data, error }
+  inserted = upsertResp.data || null;
+  insertErr = upsertResp.error || null;
+} catch (e) {
+  console.error('INSERT: upsert threw unexpected error', e);
+  insertErr = e;
+}
 
-    if (insertErr) {
-      console.warn('Batch insert failed, falling back to single inserts:', insertErr);
-    }
+// LOG extra para debug
+console.log('INSERT: upsert returned inserted length:', Array.isArray(inserted) ? inserted.length : String(inserted));
+console.log('INSERT: upsert inserted sample:', (Array.isArray(inserted) && inserted[0]) ? inserted[0] : inserted);
+console.log('INSERT: upsert insertErr:', insertErr);
 
-    // fallback one-by-one (mejor logado)
-    if ((!Array.isArray(inserted) || inserted.length === 0) && (!insertErr)) {
-      // caso raro: no error pero tampoco data
-      console.warn('Batch insert returned no rows and no error — will try one-by-one fallback.');
-    }
+let results = inserted || [];
 
-    if (insertErr || !Array.isArray(inserted) || inserted.length === 0) {
+if (insertErr) {
+  console.warn('Upsert reported error — will fallback to single inserts and reconcile:', insertErr);
+}
 
-      results = [];
-      for (const row of inserts) {
-        try {
-          const { data: d, error: e } = await supa
-            .from('donations')
-            .insert([row], { returning: 'representation' });
-
-          console.log('INSERT: single insert returned data:', d, 'error:', e);
-          if (e) {
-            // Manejo explícito de conflicto único (race condition)
-            if (e.code === '23505') {
-              console.warn('Insert one: duplicate (likely already inserted concurrently) for sale', row.sale_id);
-              // no push, vamos a reconciliar posteriormente
-              continue;
-            }
-            console.warn('Insert one failed for sale', row.sale_id, e.message || e);
-            continue;
-          }
-          if (Array.isArray(d) && d[0]) results.push(d[0]);
-        } catch (e) {
-          console.error('Insert single error (unexpected)', e, 'row=', row);
-        }
-      }
-    }
-
-    // --- NEW: RECONCILE / RE-FETCH donations if we got no results (race handling) ---
-    if (!Array.isArray(results) || results.length === 0) {
-      try {
-        console.log('RECONCILE: results empty — re-query donations for candidate sale_ids');
-        const candidateIds = inserts.map(r => r.sale_id);
-        const { data: existingNow, error: existingNowErr } = await supa
-          .from('donations')
-          .select('*')
-          .in('sale_id', candidateIds);
-
-        if (existingNowErr) {
-          console.error('RECONCILE: error fetching donations after insert attempts', existingNowErr);
-        } else if (Array.isArray(existingNow) && existingNow.length) {
-          console.log('RECONCILE: found donations in DB for candidate sale_ids:', existingNow.map(d => d.sale_id));
-          results = existingNow;
-        } else {
-          console.log('RECONCILE: no donations found on re-query');
-        }
-      } catch (e) {
-        console.error('RECONCILE: unexpected error', e);
-      }
-    }
 
     // 6) AUDIT: insertar filas en audit_donations_log (verboso + fallback)
     if (results.length) {
