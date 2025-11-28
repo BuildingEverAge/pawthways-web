@@ -100,32 +100,48 @@ console.log("LOG-3 candidates_ids:", candidates.map(c => c.id));
       }
     }
 
-    // 6) AUDIT: insertar filas en audit_donations_log
-    if (results.length) {
-      const auditRows = results.map(d => ({
-        donation_id: d.id,
-        sale_id: d.sale_id,
-        action: 'allocated',
-        actor: 'system.allocate',
-        meta: { amount: d.amount, currency: d.currency }
-        // created_at lo pone la BD por defecto
-      }));
+    // 6) AUDIT: insertar filas en audit_donations_log (verboso + fallback)
+if (results.length) {
+  const auditRows = results.map(d => ({
+    donation_id: d.id,
+    sale_id: d.sale_id,
+    action: 'allocated',
+    actor: 'system.allocate',
+    meta: { amount: d.amount, currency: d.currency }
+  }));
 
-      try {
-        const { error: auditErr } = await supa
-          .from('audit_donations_log')
-          .insert(auditRows);
+  try {
+    const { data: auditInserted, error: auditErr } = await supa
+      .from('audit_donations_log')
+      .insert(auditRows, { returning: 'representation' });
 
-        if (auditErr) {
-          console.error('Failed to insert audit rows', auditErr);
-          // no forzamos fallo del endpoint por error de auditoría
-        } else {
-          console.log(`Inserted ${auditRows.length} audit rows`);
+    console.log('AUDIT: inserted rows count:', (auditInserted || []).length);
+    console.log('AUDIT: auditInserted sample:', (auditInserted || [])[0] || null);
+    if (auditErr) console.error('AUDIT: batch insert error:', auditErr);
+
+    if (auditErr || !Array.isArray(auditInserted) || auditInserted.length !== auditRows.length) {
+      console.warn('AUDIT: falling back to single inserts');
+      const fallbackInserted = [];
+      for (const row of auditRows) {
+        try {
+          const { data: singleData, error: singleErr } = await supa
+            .from('audit_donations_log')
+            .insert([row], { returning: 'representation' });
+          if (singleErr) {
+            console.error('AUDIT: single insert error', singleErr, 'row=', row);
+            continue;
+          }
+          if (Array.isArray(singleData) && singleData[0]) fallbackInserted.push(singleData[0]);
+        } catch (e) {
+          console.error('AUDIT: unexpected single insert error', e, 'row=', row);
         }
-      } catch (ae) {
-        console.error('Unexpected audit insert error', ae);
       }
+      console.log('AUDIT: fallbackInserted count:', fallbackInserted.length);
     }
+  } catch (ae) {
+    console.error('AUDIT: unexpected exception inserting audit rows', ae);
+  }
+}
 
     // 7) devolver resumen
     const totalAllocated = results.reduce((s, x) => s + Number(x.amount || 0), 0);
