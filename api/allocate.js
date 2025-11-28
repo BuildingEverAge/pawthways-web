@@ -74,33 +74,62 @@ export default async function handler(req, res) {
 
     console.log(`Prepared inserts for ${inserts.length} sales`);
 
-    // 5) intentar upsert (idempotente) — evita 23505 race conflicts
-let inserted = null;
-let insertErr = null;
+    // --- 5) insertar idempotente vía RPC (insert_donations_batch) ---
+let results = [];
 
+// llama a la función SQL que hace INSERT ... ON CONFLICT DO NOTHING RETURNING *
 try {
-  // usar upsert con onConflict sale_id para que sea idempotente
-  const upsertResp = await supa
-    .from('donations')
-    .upsert(inserts, { onConflict: 'sale_id', returning: 'representation' });
+  const { data: rpcData, error: rpcErr } = await supa
+    .rpc('insert_donations_batch', { _rows: JSON.stringify(inserts) });
 
-  // En algunas versiones de supabase-js upsert devuelve { data, error }
-  inserted = upsertResp.data || null;
-  insertErr = upsertResp.error || null;
+  if (rpcErr) {
+    console.error('RPC insert_donations_batch error:', rpcErr);
+    // si falla la RPC (raro), fallback a single inserts (ver abajo)
+  } else if (Array.isArray(rpcData) && rpcData.length) {
+    console.log('RPC: inserted rows count:', rpcData.length);
+    results = rpcData;
+  } else {
+    console.log('RPC: no rows returned (no new inserts)');
+    results = [];
+  }
 } catch (e) {
-  console.error('INSERT: upsert threw unexpected error', e);
-  insertErr = e;
+  console.error('RPC call threw unexpected error:', e);
 }
 
-// LOG extra para debug
-console.log('INSERT: upsert returned inserted length:', Array.isArray(inserted) ? inserted.length : String(inserted));
-console.log('INSERT: upsert inserted sample:', (Array.isArray(inserted) && inserted[0]) ? inserted[0] : inserted);
-console.log('INSERT: upsert insertErr:', insertErr);
+// Fallback robusto: en caso RPC fallase por alguna razón, intentar inserts individuales con ON CONFLICT DO NOTHING via supa.from
+if (!Array.isArray(results) || results.length === 0) {
+  try {
+    // intentamos inserts individuales idempotentes
+    const fallbackResults = [];
+    for (const row of inserts) {
+      try {
+        const q = `
+          INSERT INTO public.donations (sale_id, amount, currency, allocated_at)
+          VALUES ($1::uuid, $2::numeric, $3::text, $4::timestamptz)
+          ON CONFLICT (sale_id) DO NOTHING
+          RETURNING id, sale_id, amount, currency, allocated_at, created_at;
+        `;
+        // Supabase JS no expone query with params directly — usamos rpc with single-row wrapper if needed,
+        // but aquí simplemente call rpc for single array to keep consistent:
+        const { data: singleData, error: singleErr } = await supa
+          .rpc('insert_donations_batch', { _rows: JSON.stringify([row]) });
 
-let results = inserted || [];
-
-if (insertErr) {
-  console.warn('Upsert reported error — will fallback to single inserts and reconcile:', insertErr);
+        if (singleErr) {
+          console.warn('Fallback single RPC insert error for', row.sale_id, singleErr);
+          continue;
+        }
+        if (Array.isArray(singleData) && singleData[0]) fallbackResults.push(singleData[0]);
+      } catch (e) {
+        console.error('Fallback single insert unexpected error for', row.sale_id, e);
+      }
+    }
+    if (fallbackResults.length) {
+      console.log('Fallback: inserted count:', fallbackResults.length);
+      results = fallbackResults;
+    }
+  } catch (e) {
+    console.error('Fallback outer error', e);
+  }
 }
 
 
