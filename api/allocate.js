@@ -16,14 +16,20 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed. Use POST.' });
     }
 
+    console.log('api/allocate: starting allocation');
+
     // 1) obtener ventas recientes
     const { data: sales, error: salesErr } = await supa
       .from('sales')
       .select('id, amount, currency')
       .limit(1000);
 
-    if (salesErr) throw salesErr;
+    if (salesErr) {
+      console.error('Error fetching sales', salesErr);
+      throw salesErr;
+    }
     if (!Array.isArray(sales) || sales.length === 0) {
+      console.log('No sales found.');
       return res.status(200).json({ processed: 0, total_allocated: 0 });
     }
 
@@ -34,12 +40,16 @@ export default async function handler(req, res) {
       .select('sale_id')
       .in('sale_id', saleIds);
 
-    if (dErr) throw dErr;
+    if (dErr) {
+      console.error('Error fetching existing donations', dErr);
+      throw dErr;
+    }
     const donatedSaleIds = new Set((existingDonations || []).map(d => String(d.sale_id)));
 
     // 3) candidatos
     const candidates = sales.filter(s => !donatedSaleIds.has(String(s.id)));
     if (!candidates.length) {
+      console.log('No unallocated sales found.');
       return res.status(200).json({ processed: 0, total_allocated: 0 });
     }
 
@@ -55,6 +65,8 @@ export default async function handler(req, res) {
       };
     });
 
+    console.log(`Prepared inserts for ${inserts.length} sales`);
+
     // 5) intentar batch insert
     const { data: inserted, error: insertErr } = await supa
       .from('donations')
@@ -63,6 +75,7 @@ export default async function handler(req, res) {
     let results = inserted || [];
 
     if (insertErr) {
+      console.warn('Batch insert failed, falling back to single inserts:', insertErr);
       // fallback one-by-one
       results = [];
       for (const row of inserts) {
@@ -70,7 +83,10 @@ export default async function handler(req, res) {
           const { data: d, error: e } = await supa
             .from('donations')
             .insert([row], { returning: 'representation' });
-          if (e) continue;
+          if (e) {
+            console.warn('Insert one failed for sale', row.sale_id, e.message || e);
+            continue;
+          }
           if (Array.isArray(d) && d[0]) results.push(d[0]);
         } catch (e) {
           console.error('Insert single error', e);
@@ -82,24 +98,32 @@ export default async function handler(req, res) {
     if (results.length) {
       const auditRows = results.map(d => ({
         donation_id: d.id,
+        sale_id: d.sale_id,
         action: 'allocated',
         actor: 'system.allocate',
-        meta: { sale_id: d.sale_id, amount: d.amount, currency: d.currency },
-        created_at: new Date().toISOString()
+        meta: { amount: d.amount, currency: d.currency }
+        // created_at lo pone la BD por defecto
       }));
 
-      // Supabase expects JSONB; insert array of objects
-      const { error: auditErr } = await supa
-        .from('audit_donations_log')
-        .insert(auditRows);
+      try {
+        const { error: auditErr } = await supa
+          .from('audit_donations_log')
+          .insert(auditRows);
 
-      if (auditErr) {
-        console.error('Failed to insert audit rows', auditErr);
-        // not failing the whole request on audit error
+        if (auditErr) {
+          console.error('Failed to insert audit rows', auditErr);
+          // no forzamos fallo del endpoint por error de auditoría
+        } else {
+          console.log(`Inserted ${auditRows.length} audit rows`);
+        }
+      } catch (ae) {
+        console.error('Unexpected audit insert error', ae);
       }
     }
 
+    // 7) devolver resumen
     const totalAllocated = results.reduce((s, x) => s + Number(x.amount || 0), 0);
+    console.log('api/allocate: done', { processed: results.length, totalAllocated });
     return res.status(200).json({
       processed: results.length,
       total_allocated: Math.round(totalAllocated * 100) / 100
