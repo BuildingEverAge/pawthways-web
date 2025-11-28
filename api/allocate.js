@@ -95,7 +95,8 @@ if ((!Array.isArray(inserted) || inserted.length === 0) && (!insertErr)) {
   console.warn('Batch insert returned no rows and no error — will try one-by-one fallback.');
 }
 
-if ((!Array.isArray(inserted)  inserted.length === 0)  insertErr) {
+if (insertErr || !Array.isArray(inserted) || inserted.length === 0) {
+
   results = [];
   for (const row of inserts) {
     try {
