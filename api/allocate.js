@@ -1,4 +1,4 @@
-// api/allocate.js
+// api/allocate.js (debug-capable, full-flow)
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -16,12 +16,15 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed. Use POST.' });
     }
 
-    console.log('api/allocate: starting allocation');
+    const debugMode = Boolean(req.query && (req.query.debug === '1' || req.query.debug === 'true'));
+
+    console.log('api/allocate: starting allocation', { debugMode });
 
     // 1) obtener ventas recientes
     const { data: sales, error: salesErr } = await supa
       .from('sales')
-      .select('id, amount, currency')
+      .select('id, amount, currency, created_at')
+      .order('created_at', { ascending: false })
       .limit(1000);
 
     console.log("LOG-1 sales_fetched:", Array.isArray(sales) ? sales.length : "null");
@@ -32,8 +35,7 @@ export default async function handler(req, res) {
       throw salesErr;
     }
     if (!Array.isArray(sales) || sales.length === 0) {
-      console.log('No sales found.');
-      return res.status(200).json({ processed: 0, total_allocated: 0 });
+      return res.status(200).json({ processed: 0, total_allocated: 0, reason: 'no_sales' });
     }
 
     // 2) donations existentes
@@ -49,14 +51,26 @@ export default async function handler(req, res) {
     }
     const donatedSaleIds = new Set((existingDonations || []).map(d => String(d.sale_id)));
     console.log("LOG-2 donations_found:", existingDonations?.length || 0);
-    console.log("LOG-2 donated_ids:", [...donatedSaleIds]);
+    console.log("LOG-2 donated_ids:", [...donatedSaleIds].slice(0,50));
 
     // 3) candidatos
     const candidates = sales.filter(s => !donatedSaleIds.has(String(s.id)));
     console.log("LOG-3 candidates_count:", candidates.length);
-    console.log("LOG-3 candidates_ids:", candidates.map(c => c.id));
+    console.log("LOG-3 candidates_ids:", candidates.map(c => c.id).slice(0,100));
     if (!candidates.length) {
-      console.log('No unallocated sales found.');
+      if (debugMode) {
+        return res.status(200).json({
+          processed: 0,
+          total_allocated: 0,
+          debug: {
+            sales_count: sales.length,
+            donated_count: existingDonations?.length || 0,
+            donated_ids_sample: Array.from(donatedSaleIds).slice(0,50),
+            candidates_count: 0,
+            candidates_ids: []
+          }
+        });
+      }
       return res.status(200).json({ processed: 0, total_allocated: 0 });
     }
 
@@ -73,75 +87,105 @@ export default async function handler(req, res) {
     });
 
     console.log(`Prepared inserts for ${inserts.length} sales`);
+    console.log('Prepared inserts sample:', inserts.slice(0,5));
 
-    // --- 5) insertar idempotente vía RPC (insert_donations_batch) ---
-let results = [];
-
-// llama a la función SQL que hace INSERT ... ON CONFLICT DO NOTHING RETURNING *
-try {
-  const { data: rpcData, error: rpcErr } = await supa
-    .rpc('insert_donations_batch', { _rows: JSON.stringify(inserts) });
-
-  if (rpcErr) {
-    console.error('RPC insert_donations_batch error:', rpcErr);
-    // si falla la RPC (raro), fallback a single inserts (ver abajo)
-  } else if (Array.isArray(rpcData) && rpcData.length) {
-    console.log('RPC: inserted rows count:', rpcData.length);
-    results = rpcData;
-  } else {
-    console.log('RPC: no rows returned (no new inserts)');
-    results = [];
-  }
-} catch (e) {
-  console.error('RPC call threw unexpected error:', e);
-}
-
-// Fallback robusto: en caso RPC fallase por alguna razón, intentar inserts individuales con ON CONFLICT DO NOTHING via supa.from
-if (!Array.isArray(results) || results.length === 0) {
-  try {
-    // intentamos inserts individuales idempotentes
-    const fallbackResults = [];
-    for (const row of inserts) {
-      try {
-        const q = `
-          INSERT INTO public.donations (sale_id, amount, currency, allocated_at)
-          VALUES ($1::uuid, $2::numeric, $3::text, $4::timestamptz)
-          ON CONFLICT (sale_id) DO NOTHING
-          RETURNING id, sale_id, amount, currency, allocated_at, created_at;
-        `;
-        // Supabase JS no expone query with params directly — usamos rpc with single-row wrapper if needed,
-        // but aquí simplemente call rpc for single array to keep consistent:
-        const { data: singleData, error: singleErr } = await supa
-          .rpc('insert_donations_batch', { _rows: JSON.stringify([row]) });
-
-        if (singleErr) {
-          console.warn('Fallback single RPC insert error for', row.sale_id, singleErr);
-          continue;
+    if (debugMode) {
+      // devolvemos todo lo necesario sin escribir nada
+      return res.status(200).json({
+        processed: 0,
+        total_allocated: 0,
+        debug: {
+          connectedTo: SUPABASE_URL,
+          sales_count: sales.length,
+          sales_ids: sales.map(s => s.id).slice(0,100),
+          donated_count: existingDonations?.length || 0,
+          donated_ids: Array.from(donatedSaleIds),
+          candidates_count: candidates.length,
+          candidates_ids: candidates.map(c => c.id),
+          prepared_inserts_count: inserts.length,
+          prepared_inserts_sample: inserts.slice(0,10)
         }
-        if (Array.isArray(singleData) && singleData[0]) fallbackResults.push(singleData[0]);
-      } catch (e) {
-        console.error('Fallback single insert unexpected error for', row.sale_id, e);
+      });
+    }
+
+    // --- 5) intentar batch insert via RPC (insert_donations_batch) ---
+    let results = [];
+
+    try {
+      // RPC expects jsonb param _rows (we send JSON string)
+      const { data: rpcData, error: rpcErr } = await supa
+        .rpc('insert_donations_batch', { _rows: JSON.stringify(inserts) });
+
+      if (rpcErr) {
+        console.error('RPC insert_donations_batch error:', rpcErr);
+      } else if (Array.isArray(rpcData) && rpcData.length) {
+        console.log('RPC: inserted rows count:', rpcData.length);
+        results = rpcData;
+      } else {
+        console.log('RPC: no rows returned (no new inserts)');
+        results = [];
+      }
+    } catch (e) {
+      console.error('RPC call threw unexpected error:', e);
+    }
+
+    // Fallback: if RPC didn't return rows, try single-row RPC insert calls (idempotent)
+    if ((!Array.isArray(results) || results.length === 0)) {
+      console.warn('Fallback: RPC returned no results — trying one-by-one via RPC');
+      const fallbackResults = [];
+      for (const row of inserts) {
+        try {
+          const { data: singleData, error: singleErr } = await supa
+            .rpc('insert_donations_batch', { _rows: JSON.stringify([row]) });
+
+          if (singleErr) {
+            // handle duplicates / conflicts
+            console.warn('Fallback single RPC insert error for', row.sale_id, singleErr);
+            continue;
+          }
+          if (Array.isArray(singleData) && singleData[0]) fallbackResults.push(singleData[0]);
+        } catch (e) {
+          console.error('Fallback single insert unexpected error for', row.sale_id, e);
+        }
+      }
+      if (fallbackResults.length) {
+        console.log('Fallback: inserted count:', fallbackResults.length);
+        results = fallbackResults;
       }
     }
-    if (fallbackResults.length) {
-      console.log('Fallback: inserted count:', fallbackResults.length);
-      results = fallbackResults;
-    }
-  } catch (e) {
-    console.error('Fallback outer error', e);
-  }
-}
 
+    // --- RECONCILE: if still no results, re-query donations for candidate sale_ids ---
+    if (!Array.isArray(results) || results.length === 0) {
+      try {
+        console.log('RECONCILE: results empty — re-query donations for candidate sale_ids');
+        const candidateIds = inserts.map(r => r.sale_id);
+        const { data: existingNow, error: existingNowErr } = await supa
+          .from('donations')
+          .select('*')
+          .in('sale_id', candidateIds);
+
+        if (existingNowErr) {
+          console.error('RECONCILE: error fetching donations after insert attempts', existingNowErr);
+        } else if (Array.isArray(existingNow) && existingNow.length) {
+          console.log('RECONCILE: found donations in DB for candidate sale_ids:', existingNow.map(d => d.sale_id));
+          results = existingNow;
+        } else {
+          console.log('RECONCILE: no donations found on re-query');
+        }
+      } catch (e) {
+        console.error('RECONCILE: unexpected error', e);
+      }
+    }
 
     // 6) AUDIT: insertar filas en audit_donations_log (verboso + fallback)
-    if (results.length) {
-      const auditRows = results.map(d => ({
+    if (Array.isArray(results) && results.length) {
+      const auditRows = results.map(d => (({
         donation_id: d.id,
         sale_id: d.sale_id,
         action: 'allocated',
         actor: 'system.allocate',
         meta: { amount: d.amount, currency: d.currency }
-      }));
+      })));
 
       try {
         const { data: auditInserted, error: auditErr } = await supa
@@ -177,13 +221,12 @@ if (!Array.isArray(results) || results.length === 0) {
     }
 
     // 7) devolver resumen
-    const totalAllocated = results.reduce((s, x) => s + Number(x.amount || 0), 0);
-    console.log('api/allocate: done', { processed: results.length, totalAllocated });
+    const totalAllocated = (Array.isArray(results) ? results.reduce((s, x) => s + Number(x.amount || 0), 0) : 0);
+    console.log('api/allocate: done', { processed: (results || []).length, totalAllocated });
     return res.status(200).json({
-      processed: results.length,
+      processed: (results || []).length,
       total_allocated: Math.round(totalAllocated * 100) / 100
     });
-
   } catch (err) {
     console.error('api/allocate error', err);
     return res.status(500).json({ error: err.message || 'internal' });
