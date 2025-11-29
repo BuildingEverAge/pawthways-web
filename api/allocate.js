@@ -121,7 +121,8 @@ const { data: rpcData, error: rpcErr } = await supa
   .rpc('insert_donations_batch', { _rows: inserts });
 
       if (rpcErr) {
-        console.error('RPC insert_donations_batch error:', rpcErr);
+  console.error('RPC insert_donations_batch error:', rpcErr, 'rowsAttempted:', inserts.length);
+}
       } else if (Array.isArray(rpcData) && rpcData.length) {
         console.log('RPC: inserted rows count:', rpcData.length);
         results = rpcData;
