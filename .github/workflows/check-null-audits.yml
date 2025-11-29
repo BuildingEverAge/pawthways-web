@@ -27,3 +27,18 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         run: node ./scripts/check_null_audits.js
+
+      - name: Fail workflow if null audits found
+        run: |
+          echo "Checking check_null_audits output..."
+          # Guardamos la salida del script en un archivo para leerla
+          node ./scripts/check_null_audits.js > check-output.txt
+          cat check-output.txt
+
+          # Si el script devolvió status: 'alert', fallamos
+          if grep -q '"status": "alert"' check-output.txt; then
+            echo "::error::Null audits detected in the last 24h"
+            exit 1
+          fi
+
+          echo "No null audits → workflow OK."
