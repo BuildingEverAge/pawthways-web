@@ -178,56 +178,117 @@ const { data: rpcData, error: rpcErr } = await supa
       }
     }
 
-    // 6) AUDIT: insertar filas en audit_donations_log (verboso + fallback)
-    if (Array.isArray(results) && results.length) {
-      const auditRows = results.map(d => (({
-        donation_id: d.id,
-        sale_id: d.sale_id,
-        action: 'allocated',
-        actor: 'system.allocate',
-        meta: { amount: d.amount, currency: d.currency }
-      })));
+    // 6) AUDIT + cálculo fiable: calcular totalAllocated desde la tabla donations para las sale_ids procesadas
 
-      try {
-        const { data: auditInserted, error: auditErr } = await supa
-          .from('audit_donations_log')
-          .insert(auditRows, { returning: 'representation' });
+// Construimos lista de sale_ids procesadas a partir de `results` (maneja varios shapes)
+const processedSaleIds = (Array.isArray(results) ? results.map(r => (r.sale_id || r.sale_id_out || r.saleId || (r['sale_id']))) : []);
+const uniqueSaleIds = Array.from(new Set(processedSaleIds.filter(Boolean)));
 
-        console.log('AUDIT: inserted rows count:', (auditInserted || []).length);
-        console.log('AUDIT: auditInserted sample:', (auditInserted || [])[0] || null);
-        if (auditErr) console.error('AUDIT: batch insert error:', auditErr);
+let totalAllocated = 0;
+let donationsRows = [];
 
-        if (auditErr || !Array.isArray(auditInserted) || auditInserted.length !== auditRows.length) {
-          console.warn('AUDIT: falling back to single inserts');
-          const fallbackInserted = [];
-          for (const row of auditRows) {
-            try {
-              const { data: singleData, error: singleErr } = await supa
-                .from('audit_donations_log')
-                .insert([row], { returning: 'representation' });
-              if (singleErr) {
-                console.error('AUDIT: single insert error', singleErr, 'row=', row);
-                continue;
-              }
-              if (Array.isArray(singleData) && singleData[0]) fallbackInserted.push(singleData[0]);
-            } catch (e) {
-              console.error('AUDIT: unexpected single insert error', e, 'row=', row);
-            }
-          }
-          console.log('AUDIT: fallbackInserted count:', fallbackInserted.length);
-        }
-      } catch (ae) {
-        console.error('AUDIT: unexpected exception inserting audit rows', ae);
+if (uniqueSaleIds.length) {
+  try {
+    const { data: donationsFromDb, error: donationsErr } = await supa
+      .from('donations')
+      .select('id, sale_id, amount, currency, created_at')
+      .in('sale_id', uniqueSaleIds);
+
+    if (donationsErr) {
+      console.error('Error fetching donations for total calculation', donationsErr);
+    } else if (Array.isArray(donationsFromDb) && donationsFromDb.length) {
+      donationsRows = donationsFromDb;
+      totalAllocated = donationsFromDb.reduce((s, x) => s + Number(x.amount || 0), 0);
+    }
+  } catch (e) {
+    console.error('Unexpected error fetching donations for totalAllocated', e);
+  }
+}
+
+// Fallback: si no obtuvimos nada de la BD, intentamos calcular desde `results` con normalización
+if (totalAllocated === 0 && Array.isArray(results) && results.length) {
+  const normalized = results.map(r => {
+    const amountCandidates = [r.amount, r.amount_out, r.amountOut, (r.meta && r.meta.amount)];
+    let amountVal = 0;
+    for (const c of amountCandidates) {
+      if (c !== undefined && c !== null && c !== '') {
+        const n = Number(c);
+        if (!Number.isNaN(n)) { amountVal = n; break; }
       }
     }
+    return {
+      id: r.id || r.donation_id || r.donation_id_out || null,
+      sale_id: r.sale_id || r.sale_id_out || null,
+      amount: amountVal,
+      currency: r.currency || r.currency_out || (r.meta && r.meta.currency) || 'EUR'
+    };
+  });
 
-    // 7) devolver resumen
-    const totalAllocated = (Array.isArray(results) ? results.reduce((s, x) => s + Number(x.amount || 0), 0) : 0);
-    console.log('api/allocate: done', { processed: (results || []).length, totalAllocated });
-    return res.status(200).json({
-      processed: (results || []).length,
-      total_allocated: Math.round(totalAllocated * 100) / 100
-    });
+  totalAllocated = normalized.reduce((s, x) => s + Number(x.amount || 0), 0);
+  // If donationsRows empty, use normalized to build auditRows below
+  if (!donationsRows.length) donationsRows = normalized;
+}
+
+// Construimos auditRows desde donationsRows (preferible) o desde results/normalized
+const auditRows = (Array.isArray(donationsRows) && donationsRows.length
+  ? donationsRows.map(d => ({
+      donation_id: d.id || null,
+      sale_id: d.sale_id,
+      action: 'allocated',
+      actor: 'system.allocate',
+      meta: { amount: Number(d.amount || 0), currency: d.currency || 'EUR' }
+    }))
+  : (Array.isArray(results) ? results.map(r => {
+      // best-effort normalization
+      const id = r.id || r.donation_id || r.donation_id_out || null;
+      const sale_id = r.sale_id || r.sale_id_out || null;
+      const amount = (r.amount || r.amount_out || (r.meta && r.meta.amount) || 0);
+      const currency = r.currency || r.currency_out || (r.meta && r.meta.currency) || 'EUR';
+      return { donation_id: id, sale_id, action: 'allocated', actor: 'system.allocate', meta: { amount: Number(amount || 0), currency } };
+    }) : []));
+
+// Insert audit rows (if any)
+if (auditRows.length) {
+  try {
+    const { data: auditInserted, error: auditErr } = await supa
+      .from('audit_donations_log')
+      .insert(auditRows, { returning: 'representation' });
+
+    console.log('AUDIT: inserted rows count:', (auditInserted || []).length);
+    console.log('AUDIT: auditInserted sample:', (auditInserted || [])[0] || null);
+    if (auditErr) console.error('AUDIT: batch insert error:', auditErr);
+
+    if (auditErr || !Array.isArray(auditInserted) || auditInserted.length !== auditRows.length) {
+      console.warn('AUDIT: falling back to single inserts');
+      const fallbackInserted = [];
+      for (const row of auditRows) {
+        try {
+          const { data: singleData, error: singleErr } = await supa
+            .from('audit_donations_log')
+            .insert([row], { returning: 'representation' });
+          if (singleErr) {
+            console.error('AUDIT: single insert error', singleErr, 'row=', row);
+            continue;
+          }
+          if (Array.isArray(singleData) && singleData[0]) fallbackInserted.push(singleData[0]);
+        } catch (e) {
+          console.error('AUDIT: unexpected single insert error', e, 'row=', row);
+        }
+      }
+      console.log('AUDIT: fallbackInserted count:', fallbackInserted.length);
+    }
+  } catch (ae) {
+    console.error('AUDIT: unexpected exception inserting audit rows', ae);
+  }
+}
+
+// Responder con totals usando el total calculado
+const processedCount = (uniqueSaleIds.length || (Array.isArray(results) ? results.length : 0));
+console.log('api/allocate: done', { processed: processedCount, totalAllocated });
+return res.status(200).json({
+  processed: processedCount,
+  total_allocated: Math.round(totalAllocated * 100) / 100
+});
   } catch (err) {
     console.error('api/allocate error', err);
     return res.status(500).json({ error: err.message || 'internal' });
