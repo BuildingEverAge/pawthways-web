@@ -5,15 +5,53 @@ import crypto from 'crypto';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const VERCEL_TOKEN = process.env.VERCEL_ADMIN_TOKEN;
+
+// ---------- NOTE ----------
+// If in GitHub Actions you stored the admin token under the name ADMIN_TOKEN
+// instead of VERCEL_ADMIN_TOKEN, change the next line to:
+// const VERCEL_TOKEN = process.env.ADMIN_TOKEN;
+const VERCEL_TOKEN = process.env.VERCEL_ADMIN_TOKEN || process.env.ADMIN_TOKEN;
+
 const ALLOCATE_URL = process.env.VERCEL_ALLOCATE_URL || 'https://pawthways-web.vercel.app/api/allocate';
 
 if (!SUPABASE_URL || !SUPABASE_KEY || !VERCEL_TOKEN) {
-  console.error('Missing required env vars (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, VERCEL_ADMIN_TOKEN)');
+  console.error('Missing required env vars (SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, VERCEL_ADMIN_TOKEN or ADMIN_TOKEN)');
   process.exit(2);
 }
 
 const supa = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false }});
+
+async function callAllocate(url, token) {
+  console.log('Calling allocate at', url);
+  const resp = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'x-admin-token': token || '',
+      'Accept': 'application/json'
+    }
+  });
+
+  console.log('allocate status:', resp.status, resp.statusText);
+  console.log('allocate content-type:', resp.headers.get('content-type'));
+
+  const text = await resp.text();
+  console.log('allocate raw response (first 2000 chars):\n', text.slice(0, 2000));
+
+  // only attempt to parse JSON if content-type explicitly says JSON
+  if (resp.headers.get('content-type') && resp.headers.get('content-type').includes('application/json')) {
+    try {
+      const body = JSON.parse(text);
+      console.log('allocate parsed body:', body);
+      return body;
+    } catch (e) {
+      console.warn('allocate body looked like JSON but parse failed:', e);
+      return null;
+    }
+  } else {
+    console.warn('allocate did not return JSON (see raw response above).');
+    return null;
+  }
+}
 
 (async () => {
   try {
@@ -30,13 +68,9 @@ const supa = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: 
     if (insertErr) throw insertErr;
     console.log('Created test sale id=', testId);
 
-    // 2) call allocate
-    const resp = await fetch(ALLOCATE_URL, {
-      method: 'POST',
-      headers: { 'x-admin-token': VERCEL_TOKEN }
-    });
-    const json = await resp.json();
-    console.log('allocate response:', json);
+    // 2) call allocate (safer logging)
+    const allocBody = await callAllocate(ALLOCATE_URL, VERCEL_TOKEN);
+    console.log('allocate response (parsed if any):', allocBody);
 
     // 3) wait a second and check donations/audit
     await new Promise(r => setTimeout(r, 1500));
