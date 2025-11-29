@@ -229,58 +229,11 @@ if (totalAllocated === 0 && Array.isArray(results) && results.length) {
   if (!donationsRows.length) donationsRows = normalized;
 }
 
-// Construimos auditRows desde donationsRows (preferible) o desde results/normalized
-const auditRows = (Array.isArray(donationsRows) && donationsRows.length
-  ? donationsRows.map(d => ({
-      donation_id: d.id || null,
-      sale_id: d.sale_id,
-      action: 'allocated',
-      actor: 'system.allocate',
-      meta: { amount: Number(d.amount || 0), currency: d.currency || 'EUR' }
-    }))
-  : (Array.isArray(results) ? results.map(r => {
-      // best-effort normalization
-      const id = r.id || r.donation_id || r.donation_id_out || null;
-      const sale_id = r.sale_id || r.sale_id_out || null;
-      const amount = (r.amount || r.amount_out || (r.meta && r.meta.amount) || 0);
-      const currency = r.currency || r.currency_out || (r.meta && r.meta.currency) || 'EUR';
-      return { donation_id: id, sale_id, action: 'allocated', actor: 'system.allocate', meta: { amount: Number(amount || 0), currency } };
-    }) : []));
+// AUDIT: delegamos la creación de logs al trigger de la base de datos.
+// Evitamos insertar auditorías desde el backend para no producir filas nulas o duplicadas.
+// Mostramos un sample para debugging, el trigger DB (db.trigger.donations) será el encargado real.
+console.log('AUDIT: delegating audit insertion to DB trigger. donationsRows sample:', (donationsRows || []).slice(0,10));
 
-// Insert audit rows (if any)
-if (auditRows.length) {
-  try {
-    const { data: auditInserted, error: auditErr } = await supa
-      .from('audit_donations_log')
-      .insert(auditRows, { returning: 'representation' });
-
-    console.log('AUDIT: inserted rows count:', (auditInserted || []).length);
-    console.log('AUDIT: auditInserted sample:', (auditInserted || [])[0] || null);
-    if (auditErr) console.error('AUDIT: batch insert error:', auditErr);
-
-    if (auditErr || !Array.isArray(auditInserted) || auditInserted.length !== auditRows.length) {
-      console.warn('AUDIT: falling back to single inserts');
-      const fallbackInserted = [];
-      for (const row of auditRows) {
-        try {
-          const { data: singleData, error: singleErr } = await supa
-            .from('audit_donations_log')
-            .insert([row], { returning: 'representation' });
-          if (singleErr) {
-            console.error('AUDIT: single insert error', singleErr, 'row=', row);
-            continue;
-          }
-          if (Array.isArray(singleData) && singleData[0]) fallbackInserted.push(singleData[0]);
-        } catch (e) {
-          console.error('AUDIT: unexpected single insert error', e, 'row=', row);
-        }
-      }
-      console.log('AUDIT: fallbackInserted count:', fallbackInserted.length);
-    }
-  } catch (ae) {
-    console.error('AUDIT: unexpected exception inserting audit rows', ae);
-  }
-}
 
 // Responder con totals usando el total calculado
 const processedCount = (uniqueSaleIds.length || (Array.isArray(results) ? results.length : 0));
