@@ -113,8 +113,9 @@ export default async function handler(req, res) {
 
     try {
       // RPC expects jsonb param _rows (we send JSON string)
-      const { data: rpcData, error: rpcErr } = await supa
-        .rpc('insert_donations_batch', { _rows: JSON.stringify(inserts) });
+      // PASO CORRECTO: pasar el array directamente (no JSON.stringify)
+const { data: rpcData, error: rpcErr } = await supa
+  .rpc('insert_donations_batch', { _rows: inserts });
 
       if (rpcErr) {
         console.error('RPC insert_donations_batch error:', rpcErr);
@@ -136,7 +137,7 @@ export default async function handler(req, res) {
       for (const row of inserts) {
         try {
           const { data: singleData, error: singleErr } = await supa
-            .rpc('insert_donations_batch', { _rows: JSON.stringify([row]) });
+  .rpc('insert_donations_batch', { _rows: [row] });
 
           if (singleErr) {
             // handle duplicates / conflicts
