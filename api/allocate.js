@@ -19,6 +19,9 @@ export default async function handler(req, res) {
     const debugMode = Boolean(req.query && (req.query.debug === '1' || req.query.debug === 'true'));
 
     console.log('api/allocate: starting allocation', { debugMode });
+    const requestId = new Date().toISOString();
+console.log('api/allocate request-id:', requestId);
+
 
     // 1) obtener ventas recientes
     const { data: sales, error: salesErr } = await supa
@@ -118,7 +121,8 @@ const { data: rpcData, error: rpcErr } = await supa
   .rpc('insert_donations_batch', { _rows: inserts });
 
       if (rpcErr) {
-        console.error('RPC insert_donations_batch error:', rpcErr);
+  console.error('RPC insert_donations_batch error:', rpcErr, 'rowsAttempted:', inserts.length);
+}
       } else if (Array.isArray(rpcData) && rpcData.length) {
         console.log('RPC: inserted rows count:', rpcData.length);
         results = rpcData;
