@@ -20,8 +20,7 @@ export default async function handler(req, res) {
 
     console.log('api/allocate: starting allocation', { debugMode });
     const requestId = new Date().toISOString();
-console.log('api/allocate request-id:', requestId);
-
+    console.log('api/allocate request-id:', requestId);
 
     // 1) obtener ventas recientes
     const { data: sales, error: salesErr } = await supa
@@ -115,14 +114,12 @@ console.log('api/allocate request-id:', requestId);
     let results = [];
 
     try {
-      // RPC expects jsonb param _rows (we send JSON string)
-      // PASO CORRECTO: pasar el array directamente (no JSON.stringify)
-const { data: rpcData, error: rpcErr } = await supa
-  .rpc('insert_donations_batch', { _rows: inserts });
+      // RPC expects jsonb param _rows (we send array directly)
+      const { data: rpcData, error: rpcErr } = await supa
+        .rpc('insert_donations_batch', { _rows: inserts });
 
       if (rpcErr) {
-  console.error('RPC insert_donations_batch error:', rpcErr, 'rowsAttempted:', inserts.length);
-}
+        console.error('RPC insert_donations_batch error:', rpcErr, 'rowsAttempted:', inserts.length);
       } else if (Array.isArray(rpcData) && rpcData.length) {
         console.log('RPC: inserted rows count:', rpcData.length);
         results = rpcData;
@@ -141,7 +138,7 @@ const { data: rpcData, error: rpcErr } = await supa
       for (const row of inserts) {
         try {
           const { data: singleData, error: singleErr } = await supa
-  .rpc('insert_donations_batch', { _rows: [row] });
+            .rpc('insert_donations_batch', { _rows: [row] });
 
           if (singleErr) {
             // handle duplicates / conflicts
@@ -184,68 +181,67 @@ const { data: rpcData, error: rpcErr } = await supa
 
     // 6) AUDIT + cálculo fiable: calcular totalAllocated desde la tabla donations para las sale_ids procesadas
 
-// Construimos lista de sale_ids procesadas a partir de `results` (maneja varios shapes)
-const processedSaleIds = (Array.isArray(results) ? results.map(r => (r.sale_id || r.sale_id_out || r.saleId || (r['sale_id']))) : []);
-const uniqueSaleIds = Array.from(new Set(processedSaleIds.filter(Boolean)));
+    // Construimos lista de sale_ids procesadas a partir de `results` (maneja varios shapes)
+    const processedSaleIds = (Array.isArray(results) ? results.map(r => (r.sale_id || r.sale_id_out || r.saleId || (r['sale_id']))) : []);
+    const uniqueSaleIds = Array.from(new Set(processedSaleIds.filter(Boolean)));
 
-let totalAllocated = 0;
-let donationsRows = [];
+    let totalAllocated = 0;
+    let donationsRows = [];
 
-if (uniqueSaleIds.length) {
-  try {
-    const { data: donationsFromDb, error: donationsErr } = await supa
-      .from('donations')
-      .select('id, sale_id, amount, currency, created_at')
-      .in('sale_id', uniqueSaleIds);
+    if (uniqueSaleIds.length) {
+      try {
+        const { data: donationsFromDb, error: donationsErr } = await supa
+          .from('donations')
+          .select('id, sale_id, amount, currency, created_at')
+          .in('sale_id', uniqueSaleIds);
 
-    if (donationsErr) {
-      console.error('Error fetching donations for total calculation', donationsErr);
-    } else if (Array.isArray(donationsFromDb) && donationsFromDb.length) {
-      donationsRows = donationsFromDb;
-      totalAllocated = donationsFromDb.reduce((s, x) => s + Number(x.amount || 0), 0);
-    }
-  } catch (e) {
-    console.error('Unexpected error fetching donations for totalAllocated', e);
-  }
-}
-
-// Fallback: si no obtuvimos nada de la BD, intentamos calcular desde `results` con normalización
-if (totalAllocated === 0 && Array.isArray(results) && results.length) {
-  const normalized = results.map(r => {
-    const amountCandidates = [r.amount, r.amount_out, r.amountOut, (r.meta && r.meta.amount)];
-    let amountVal = 0;
-    for (const c of amountCandidates) {
-      if (c !== undefined && c !== null && c !== '') {
-        const n = Number(c);
-        if (!Number.isNaN(n)) { amountVal = n; break; }
+        if (donationsErr) {
+          console.error('Error fetching donations for total calculation', donationsErr);
+        } else if (Array.isArray(donationsFromDb) && donationsFromDb.length) {
+          donationsRows = donationsFromDb;
+          totalAllocated = donationsFromDb.reduce((s, x) => s + Number(x.amount || 0), 0);
+        }
+      } catch (e) {
+        console.error('Unexpected error fetching donations for totalAllocated', e);
       }
     }
-    return {
-      id: r.id || r.donation_id || r.donation_id_out || null,
-      sale_id: r.sale_id || r.sale_id_out || null,
-      amount: amountVal,
-      currency: r.currency || r.currency_out || (r.meta && r.meta.currency) || 'EUR'
-    };
-  });
 
-  totalAllocated = normalized.reduce((s, x) => s + Number(x.amount || 0), 0);
-  // If donationsRows empty, use normalized to build auditRows below
-  if (!donationsRows.length) donationsRows = normalized;
-}
+    // Fallback: si no obtuvimos nada de la BD, intentamos calcular desde `results` con normalización
+    if (totalAllocated === 0 && Array.isArray(results) && results.length) {
+      const normalized = results.map(r => {
+        const amountCandidates = [r.amount, r.amount_out, r.amountOut, (r.meta && r.meta.amount)];
+        let amountVal = 0;
+        for (const c of amountCandidates) {
+          if (c !== undefined && c !== null && c !== '') {
+            const n = Number(c);
+            if (!Number.isNaN(n)) { amountVal = n; break; }
+          }
+        }
+        return {
+          id: r.id || r.donation_id || r.donation_id_out || null,
+          sale_id: r.sale_id || r.sale_id_out || null,
+          amount: amountVal,
+          currency: r.currency || r.currency_out || (r.meta && r.meta.currency) || 'EUR'
+        };
+      });
 
-// AUDIT: delegamos la creación de logs al trigger de la base de datos.
-// Evitamos insertar auditorías desde el backend para no producir filas nulas o duplicadas.
-// Mostramos un sample para debugging, el trigger DB (db.trigger.donations) será el encargado real.
-console.log('AUDIT: delegating audit insertion to DB trigger. donationsRows sample:', (donationsRows || []).slice(0,10));
+      totalAllocated = normalized.reduce((s, x) => s + Number(x.amount || 0), 0);
+      // If donationsRows empty, use normalized to build auditRows below
+      if (!donationsRows.length) donationsRows = normalized;
+    }
 
+    // AUDIT: delegamos la creación de logs al trigger de la base de datos.
+    // Evitamos insertar auditorías desde el backend para no producir filas nulas o duplicadas.
+    // Mostramos un sample para debugging, el trigger DB (db.trigger.donations) será el encargado real.
+    console.log('AUDIT: delegating audit insertion to DB trigger. donationsRows sample:', (donationsRows || []).slice(0,10));
 
-// Responder con totals usando el total calculado
-const processedCount = (uniqueSaleIds.length || (Array.isArray(results) ? results.length : 0));
-console.log('api/allocate: done', { processed: processedCount, totalAllocated });
-return res.status(200).json({
-  processed: processedCount,
-  total_allocated: Math.round(totalAllocated * 100) / 100
-});
+    // Responder con totals usando el total calculado
+    const processedCount = (uniqueSaleIds.length || (Array.isArray(results) ? results.length : 0));
+    console.log('api/allocate: final processed, total_allocated', { processed: processedCount, totalAllocated });
+    return res.status(200).json({
+      processed: processedCount,
+      total_allocated: Math.round(totalAllocated * 100) / 100
+    });
   } catch (err) {
     console.error('api/allocate error', err);
     return res.status(500).json({ error: err.message || 'internal' });

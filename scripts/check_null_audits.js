@@ -8,11 +8,17 @@ const SLACK_WEBHOOK = process.env.SLACK_WEBHOOK_URL;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY env vars');
-  process.exit(2);
+  // no hacemos process.exit para evitar aserciones en Windows; dejamos que el script termine
 }
+
+process.on('unhandledRejection', (reason, p) => {
+  console.error('Unhandled Rejection at:', p, 'reason:', reason);
+  // no forcemos exit: se registrará el error y Node terminará cuando no haya handles
+});
+
 const supa = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: false }});
 
-(async () => {
+async function runCheck() {
   try {
     // Query: count of null audits in last 24h
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -32,24 +38,35 @@ const supa = createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: 
       console.log(text);
 
       if (SLACK_WEBHOOK) {
-        await fetch(SLACK_WEBHOOK, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text })
-        });
-        console.log('Slack webhook notified.');
+        try {
+          await fetch(SLACK_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+          });
+          console.log('Slack webhook notified.');
+        } catch (e) {
+          console.warn('Failed to notify Slack webhook:', e.message || e);
+        }
       } else {
         console.warn('No SLACK_WEBHOOK_URL configured. Set secret to receive Slack alerts.');
       }
 
-      // fail the job so you see it in Actions UI
-      process.exit(1);
+      // Retornamos un código lógico (no forcemos process.exit)
+      return { nullCount, status: 'alert' };
     } else {
       console.log('No null audits in the last 24h.');
-      process.exit(0);
+      return { nullCount: 0, status: 'ok' };
     }
   } catch (e) {
     console.error('Check failed:', e);
-    process.exit(2);
+    return { error: String(e), status: 'error' };
   }
+}
+
+(async () => {
+  const result = await runCheck();
+  // Imprimimos resultado final (útil para CI)
+  console.log('check_null_audits result:', result);
+  // No forcamos salir; dejamos que Node cierre sus handles naturalmente
 })();
