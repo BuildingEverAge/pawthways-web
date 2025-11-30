@@ -1,10 +1,12 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>How it works — Revenue Model (Pawthways)</title>
-  <meta name="description" content="Transparency: how Pawthways generates revenue and how 40% is allocated to animal rescues. Interactive dashboard and visual flow." />
+  <title>How it works â€” Revenue Model (Pawthways)</title>
+  
+  <script defer src="/assets/js/chart.umd.min.js"></script>
+<meta name="description" content="Transparency: how Pawthways generates revenue and how 40% is allocated to animal rescues. Interactive dashboard and visual flow." />
   <!-- Chart.js CDN -->
   <!-- Chart.js CDN removed (some browsers block third-party storage). If you want Chart locally, please add /assets/js/chart.umd.min.js -->
   <style>
@@ -44,10 +46,10 @@
 </head>
 <body>
   <script>
-  // Shim temporal para evitar ReferenceError si Chart.js está bloqueado.
+  // Shim temporal para evitar ReferenceError si Chart.js estÃ¡ bloqueado.
   if (typeof Chart === 'undefined') {
     window.Chart = function(ctx, config){
-      // constructor shim: guarda datos mínimos y una update() vacía para que el código que llama no rompa.
+      // constructor shim: guarda datos mÃ­nimos y una update() vacÃ­a para que el cÃ³digo que llama no rompa.
       this.data = (config && config.data) ? config.data : { datasets: [] };
       this.update = function(){ /* noop */ };
     };
@@ -58,11 +60,11 @@
   <main class="wrap" role="main">
     <header>
       <div>
-        <h1>How it works — Revenue Model (Pawthways)</h1>
+        <h1>How it works â€” Revenue Model (Pawthways)</h1>
         <p class="lead">Full transparency: interactive flow diagram and real-time metrics (if the endpoint is enabled).</p>
       </div>
       <div style="margin-left:auto;text-align:right">
-        <div style="background:rgba(255,184,107,0.12);color:var(--accent);padding:8px 10px;border-radius:999px;font-weight:700">40% → Donation</div>
+        <div style="background:rgba(255,184,107,0.12);color:var(--accent);padding:8px 10px;border-radius:999px;font-weight:700">40% â†’ Donation</div>
         <div class="muted" style="font-size:13px;margin-top:8px">Fixed, audited distribution</div>
       </div>
     </header>
@@ -85,19 +87,19 @@
       <div class="kpiRow" id="kpiRow">
         <div class="kpiBox">
           <div class="label">Total revenue</div>
-          <div class="value" id="k_total_revenue">—</div>
+          <div class="value" id="k_total_revenue">â€”</div>
         </div>
         <div class="kpiBox">
           <div class="label">Total reserved / donated</div>
-          <div class="value" id="k_total_reserved">—</div>
+          <div class="value" id="k_total_reserved">â€”</div>
         </div>
         <div class="kpiBox">
           <div class="label">Donation %</div>
-          <div class="value" id="k_donation_pct">—</div>
+          <div class="value" id="k_donation_pct">â€”</div>
         </div>
         <div class="kpiBox">
           <div class="label">Pending allocations</div>
-          <div class="value" id="k_pending">—</div>
+          <div class="value" id="k_pending">â€”</div>
         </div>
       </div>
       <p class="small" style="margin-top:10px">These numbers come from the server endpoint <code>/api/admin-stats</code>. If unavailable the visualizations fall back to default 40/60.</p>
@@ -175,7 +177,7 @@
       <ul class="small">
         <li><strong>Product Sales:</strong> artbooks, AI packs, music and creation resources.</li>
         <li><strong>Upsells & Merchandising:</strong> higher-tier content, future digital collectibles or merchandise.</li>
-        <li><strong>Indirect Donations:</strong> 40% of revenue is allocated to charitable causes — this acts as the donations channel.</li>
+        <li><strong>Indirect Donations:</strong> 40% of revenue is allocated to charitable causes â€” this acts as the donations channel.</li>
       </ul>
 
       <div class="section-title">How income is generated</div>
@@ -204,16 +206,16 @@
       <h3 id="impact-title">Example impact (illustrative)</h3>
       <div class="impact-grid">
         <div class="impact-card">
-          <strong>€30</strong>
-          <div class="small">≈ 3 days of feeding for a small shelter dog</div>
+          <strong>â‚¬30</strong>
+          <div class="small">â‰ˆ 3 days of feeding for a small shelter dog</div>
         </div>
         <div class="impact-card">
-          <strong>€100</strong>
-          <div class="small">≈ basic medical check & vaccine for one dog</div>
+          <strong>â‚¬100</strong>
+          <div class="small">â‰ˆ basic medical check & vaccine for one dog</div>
         </div>
         <div class="impact-card">
-          <strong>€500</strong>
-          <div class="small">≈ emergency surgery / rehabilitation support</div>
+          <strong>â‚¬500</strong>
+          <div class="small">â‰ˆ emergency surgery / rehabilitation support</div>
         </div>
       </div>
       <p class="muted" style="margin-top:10px">These examples help donors understand the real-world effect of the 40% charitable allocation.</p>
@@ -240,7 +242,7 @@
 
     <footer>
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-        <div>© Pawthways — Transparency & responsibility.</div>
+        <div>Â© Pawthways â€” Transparency & responsibility.</div>
         <div class="muted">Documentation: revenue model and operational checklist.</div>
       </div>
     </footer>
@@ -318,7 +320,7 @@
           if (typeof Chart !== 'undefined') {
             chart = new Chart(ctx, config);
           } else {
-            console.warn('Chart library not available — using static fallback.');
+            console.warn('Chart library not available â€” using static fallback.');
             try { if (canvasEl) canvasEl.style.display = 'none'; } catch(e){}
             const parent = canvasEl ? canvasEl.parentElement : null;
             if (parent && !parent.querySelector('.chart-fallback')) {
@@ -370,14 +372,14 @@
         const ts = json.generated_at || json.timestamp || null;
 
         const elTotal = document.getElementById('k_total_revenue');
-        if (elTotal) elTotal.textContent = totalSales > 0 ? '€ ' + Number(totalSales).toFixed(2) : '—';
+        if (elTotal) elTotal.textContent = totalSales > 0 ? 'â‚¬ ' + Number(totalSales).toFixed(2) : 'â€”';
         const elReserved = document.getElementById('k_total_reserved');
-        if (elReserved) elReserved.textContent = totalReserved > 0 ? '€ ' + Number(totalReserved).toFixed(2) : '—';
+        if (elReserved) elReserved.textContent = totalReserved > 0 ? 'â‚¬ ' + Number(totalReserved).toFixed(2) : 'â€”';
         const elPct = document.getElementById('k_donation_pct');
         const donationPct = totalSales > 0 ? Math.round((totalReserved / totalSales) * 100) : 40;
         if (elPct) elPct.textContent = donationPct + '%';
         const elPending = document.getElementById('k_pending');
-        if (elPending) elPending.textContent = pending > 0 ? '€ ' + pending.toFixed(2) : '—';
+        if (elPending) elPending.textContent = pending > 0 ? 'â‚¬ ' + pending.toFixed(2) : 'â€”';
         setLastUpdated(ts);
 
         // Update chart or fallback text
@@ -417,3 +419,4 @@
 </html>
 
 <!-- redeploy: force -->
+
