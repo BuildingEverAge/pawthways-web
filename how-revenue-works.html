@@ -339,53 +339,69 @@
 
       const adminEndpoint = '/api/admin-stats';
 
-      async function fetchAdminStats(){
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(()=> controller.abort(), 3500);
-          const res = await fetch(adminEndpoint, {signal: controller.signal});
-          clearTimeout(timeoutId);
-          if (!res.ok) throw new Error('no data from admin-stats');
-          const json = await res.json();
+          async function fetchAdminStats(){
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(()=> controller.abort(), 3500);
+        const res = await fetch(adminEndpoint, {signal: controller.signal});
+        clearTimeout(timeoutId);
 
-          const totalSales = Number(json.total_sales || json.totalRevenue || 0);
-          const totalReserved = Number(json.total_reserved || json.total_donated || (totalSales * 0.4));
-          const pending = Number(json.pending || 0);
-          const ts = json.generated_at || json.timestamp || null;
-
-          const elTotal = document.getElementById('k_total_revenue');
-          if (elTotal) elTotal.textContent = totalSales > 0 ? '€ ' + Number(totalSales).toFixed(2) : '—';
-          const elReserved = document.getElementById('k_total_reserved');
-          if (elReserved) elReserved.textContent = totalReserved > 0 ? '€ ' + Number(totalReserved).toFixed(2) : '—';
-          const elPct = document.getElementById('k_donation_pct');
-          const donationPct = totalSales > 0 ? Math.round((totalReserved / totalSales) * 100) : 40;
-          if (elPct) elPct.textContent = donationPct + '%';
-          const elPending = document.getElementById('k_pending');
-          if (elPending) elPending.textContent = pending > 0 ? '€ ' + pending.toFixed(2) : '—';
-          setLastUpdated(ts);
-
-          try {
-            const rest = 100 - donationPct;
-            if (chart && chart.data && chart.data.datasets) {
-              chart.data.datasets[0].data = [donationPct, rest];
-              chart.data.labels = [`Donations (${donationPct}%)`, `Production & Growth (${rest}%)`];
-              chart.update();
-            } else {
-              const parent = canvasEl ? canvasEl.parentElement : null;
-              if (parent) {
-                const txt = parent.querySelector('.chart-fallback div[style*="color:var(--muted)"]');
-                if (txt) txt.textContent = `Donations: ${donationPct}%`;
-              }
-            }
-          } catch (e) {
-            console.warn('Error updating chart UI:', e);
-          }
-
-        } catch (err) {
-          console.warn('admin-stats endpoint unreachable, using defaults.', err);
-          setLastUpdated(null);
+        if (!res.ok) {
+          const txt = await res.text().catch(()=>null);
+          console.warn('admin-stats responded with non-OK status', res.status, txt && txt.slice(0,500));
+          throw new Error('no data from admin-stats: ' + res.status);
         }
+
+        const ct = res.headers.get('content-type') || '';
+        let json = null;
+
+        if (ct.includes('application/json')) {
+          json = await res.json();
+        } else {
+          const bodyText = await res.text().catch(()=>null);
+          console.warn('admin-stats returned non-JSON body (first 1000 chars):', bodyText && bodyText.slice(0,1000));
+          json = {};
+        }
+
+        const totalSales = Number(json.total_sales || json.totalRevenue || 0);
+        const totalReserved = Number(json.total_reserved || json.total_donated || (totalSales * 0.4));
+        const pending = Number(json.pending || 0);
+        const ts = json.generated_at || json.timestamp || null;
+
+        const elTotal = document.getElementById('k_total_revenue');
+        if (elTotal) elTotal.textContent = totalSales > 0 ? '€ ' + Number(totalSales).toFixed(2) : '—';
+        const elReserved = document.getElementById('k_total_reserved');
+        if (elReserved) elReserved.textContent = totalReserved > 0 ? '€ ' + Number(totalReserved).toFixed(2) : '—';
+        const elPct = document.getElementById('k_donation_pct');
+        const donationPct = totalSales > 0 ? Math.round((totalReserved / totalSales) * 100) : 40;
+        if (elPct) elPct.textContent = donationPct + '%';
+        const elPending = document.getElementById('k_pending');
+        if (elPending) elPending.textContent = pending > 0 ? '€ ' + pending.toFixed(2) : '—';
+        setLastUpdated(ts);
+
+        // Update chart or fallback text
+        try {
+          const rest = 100 - donationPct;
+          if (chart && chart.data && chart.data.datasets) {
+            chart.data.datasets[0].data = [donationPct, rest];
+            chart.data.labels = [`Donations (${donationPct}%)`, `Production & Growth (${rest}%)`];
+            chart.update();
+          } else {
+            const parent = canvasEl ? canvasEl.parentElement : null;
+            if (parent) {
+              const txt = parent.querySelector('.chart-fallback div[style*="color:var(--muted)"]');
+              if (txt) txt.textContent = `Donations: ${donationPct}%`;
+            }
+          }
+        } catch (e) {
+          console.warn('Error updating chart UI:', e);
+        }
+
+      } catch (err) {
+        console.warn('admin-stats endpoint unreachable or invalid response, using defaults.', err);
+        setLastUpdated(null);
       }
+    }
 
       // init & fetch
       initChartIfAvailable();
