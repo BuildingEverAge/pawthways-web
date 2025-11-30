@@ -148,6 +148,7 @@
       const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZqbG9ud2FicW1iemtwcmRkcXN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MDY3ODEsImV4cCI6MjA3ODM4Mjc4MX0.jBnyGnIhmAUFGg0RL8sw-5L8tBAgiJM5s-AXuHPtMuU";
 
       const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const MONTHLY_ENDPOINT = '/api/admin-stats';
 
       function formatDate(isoString) {
         if (!isoString) return "";
@@ -172,69 +173,136 @@ function escapeHtml(str) {
 }
 
 
-      // Pawthways: Load KPIs from public_stats_view
-      async function loadKPIs() {
-        const kpisStatusEl = document.getElementById('kpis-status');
-        const totalDonatedEl = document.getElementById('total-donated');
-        const totalRescuesEl = document.getElementById('total-rescues');
-        const fundedRescuesEl = document.getElementById('funded-rescues');
-        const lastUpdatedEl = document.getElementById('last-updated');
+      // Pawthways: Load KPIs from public_stats_view (enhanced: fallback to monthly aggregate endpoint)
+async function loadKPIs() {
+  const kpisStatusEl = document.getElementById('kpis-status');
+  const totalDonatedEl = document.getElementById('total-donated');
+  const totalRescuesEl = document.getElementById('total-rescues');
+  const fundedRescuesEl = document.getElementById('funded-rescues');
+  const lastUpdatedEl = document.getElementById('last-updated');
 
-        if (!kpisStatusEl || !totalDonatedEl || !totalRescuesEl || !fundedRescuesEl || !lastUpdatedEl) {
-          return;
-        }
+  if (!kpisStatusEl || !totalDonatedEl || !totalRescuesEl || !fundedRescuesEl || !lastUpdatedEl) {
+    return;
+  }
 
-        kpisStatusEl.textContent = 'Loading live stats…';
+  kpisStatusEl.textContent = 'Loading live stats…';
 
-        try {
-          const { data, error } = await supabaseClient
-            .from('public_stats_view')
-            .select('*')
-            .single();
+  // Helper: format currency
+  function fmtCurr(n){
+    if (n == null || n === '' || isNaN(Number(n))) return '0';
+    return Number(n).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
 
-          if (error) {
-            console.error('Error loading KPIs:', error);
-            kpisStatusEl.textContent = 'We could not load stats right now. Transparency logs are still available below.';
-            return;
-          }
+  try {
+    // 1) Try the Supabase view first (existing behavior)
+    const { data, error } = await supabaseClient
+      .from('public_stats_view')
+      .select('*')
+      .single();
 
-          if (!data) {
-            kpisStatusEl.textContent = 'Stats coming soon — transparency logs below are still live.';
-            totalDonatedEl.textContent = '0';
-            totalRescuesEl.textContent = '0';
-            fundedRescuesEl.textContent = '0';
-            lastUpdatedEl.textContent = 'Never';
-            return;
-          }
+    if (error) {
+      // keep trying fallback, but log
+      console.warn('public_stats_view error (continuing to fallback):', error);
+    }
 
-          // Display KPIs
-          kpisStatusEl.textContent = '';
-          totalDonatedEl.textContent = data.total_donated || '0';
-          totalRescuesEl.textContent = data.total_rescues || '0';
-          fundedRescuesEl.textContent = data.funded_rescues || '0';
-          
-          // Format last updated timestamp
-          const lastUpdated = data.last_update_at;
-          if (lastUpdated) {
-            const d = new Date(lastUpdated);
-            if (!isNaN(d.getTime())) {
-              lastUpdatedEl.textContent = d.toLocaleDateString('en-GB', {
-                year: 'numeric',
-                month: 'short',
-                day: '2-digit'
-              });
-            } else {
-              lastUpdatedEl.textContent = lastUpdated;
-            }
-          } else {
-            lastUpdatedEl.textContent = 'Never';
-          }
+    if (data && (Number(data.total_donated || 0) > 0 || Number(data.total_rescues || 0) > 0 || data.funded_rescues)) {
+      // Good data from public_stats_view — use it
+      kpisStatusEl.textContent = '';
+      totalDonatedEl.textContent = `€ ${fmtCurr(Number(data.total_donated || 0))}`;
+      totalRescuesEl.textContent = data.total_rescues != null ? String(data.total_rescues) : '0';
+      fundedRescuesEl.textContent = data.funded_rescues != null ? String(data.funded_rescues) : '0';
 
-        } catch (err) {
-          console.error('KPIs loading error:', err);
-          kpisStatusEl.textContent = 'We could not load stats right now. Transparency logs are still available below.';
-        }
+      // last update
+      const lastUpdated = data.last_update_at || data.last_update || data.updated_at || null;
+      if (lastUpdated) {
+        const d = new Date(lastUpdated);
+        lastUpdatedEl.textContent = !isNaN(d.getTime()) ? d.toLocaleDateString('en-GB', {year:'numeric',month:'short',day:'2-digit'}) : String(lastUpdated);
+      } else {
+        lastUpdatedEl.textContent = 'Never';
       }
+
+      return; // done
+    }
+
+    // 2) Fallback: fetch the monthly aggregated JSON or admin-stats (handles both shapes)
+    try {
+      const ctrl = new AbortController();
+      const to = setTimeout(()=> ctrl.abort(), 3500);
+      const res = await fetch(MONTHLY_ENDPOINT, { signal: ctrl.signal });
+      clearTimeout(to);
+      if (!res.ok) throw new Error('monthly/admin endpoint returned non-OK status');
+      const payload = await res.json();
+
+      // If payload is an array (monthly aggregates), use first row
+      if (Array.isArray(payload) && payload.length > 0) {
+        const row = payload[0];
+        const totalReserved = Number(row.total_reserved || row.total_donated || 0);
+        const totalSales = Number(row.total_sales || 0);
+        const salesCount = row.sales_count != null ? row.sales_count : (row.sales || 0);
+        const pctReserved = row.pct_reserved != null ? Number(row.pct_reserved) : (totalSales ? (totalReserved / totalSales * 100) : 40);
+
+        kpisStatusEl.textContent = '';
+        totalDonatedEl.textContent = `€ ${fmtCurr(totalReserved)}`;
+        totalRescuesEl.textContent = String(salesCount || 0);
+        fundedRescuesEl.textContent = `${pctReserved.toFixed(2)}% reserved`;
+        lastUpdatedEl.textContent = row.month ? new Date(row.month).toLocaleDateString('en-GB', {year:'numeric',month:'short',day:'2-digit'}) : 'Never';
+        return;
+      }
+
+      // If payload is an object (admin-stats), read known fields
+      if (payload && typeof payload === 'object') {
+        // admin-stats returns { pending, total_sales, total_reserved, ... }
+        const totalReserved = Number(payload.total_reserved || payload.total_donated || 0);
+        const totalSales = Number(payload.total_sales || payload.total_revenue || 0);
+        const pendingVal = Number(payload.pending || 0);
+        const pctReserved = totalSales > 0 ? Math.round((totalReserved / totalSales) * 100) : 40;
+        const salesCount = payload.sales_count || payload.total_count || ''; // optional
+
+        kpisStatusEl.textContent = '';
+        totalDonatedEl.textContent = totalReserved > 0 ? `€ ${fmtCurr(totalReserved)}` : '0';
+        totalRescuesEl.textContent = salesCount ? String(salesCount) : (totalSales ? String(Math.round(totalSales)) : '0');
+        fundedRescuesEl.textContent = `${pctReserved}% reserved`;
+        lastUpdatedEl.textContent = payload.timestamp || payload.generated_at || 'Never';
+        return;
+      }
+
+      // payload unexpected shape
+      kpisStatusEl.textContent = 'No aggregated data yet — transparency logs below are still live.';
+      totalDonatedEl.textContent = '0';
+      totalRescuesEl.textContent = '0';
+      fundedRescuesEl.textContent = '0';
+      lastUpdatedEl.textContent = 'Never';
+      return;
+
+    } catch (monthlyErr) {
+      console.warn('Monthly/admin endpoint fallback failed:', monthlyErr);
+      // final fallback to empty state (preserve any data from Supabase view if present)
+      if (!data) {
+        kpisStatusEl.textContent = 'Stats coming soon — transparency logs below are still live.';
+        totalDonatedEl.textContent = '0';
+        totalRescuesEl.textContent = '0';
+        fundedRescuesEl.textContent = '0';
+        lastUpdatedEl.textContent = 'Never';
+      } else {
+        kpisStatusEl.textContent = '';
+        totalDonatedEl.textContent = data.total_donated || '0';
+        totalRescuesEl.textContent = data.total_rescues || '0';
+        fundedRescuesEl.textContent = data.funded_rescues || '0';
+        lastUpdatedEl.textContent = data.last_update_at || 'Never';
+      }
+      return;
+    }
+
+  } catch (err) {
+    console.error('KPIs loading error (final):', err);
+    kpisStatusEl.textContent = 'We could not load stats right now. Transparency logs are still available below.';
+    totalDonatedEl.textContent = '0';
+    totalRescuesEl.textContent = '0';
+    fundedRescuesEl.textContent = '0';
+    lastUpdatedEl.textContent = 'Never';
+  }
+}
+
 
       async function loadTransparency() {
         const logsStatusEl = document.getElementById("logs-status");
