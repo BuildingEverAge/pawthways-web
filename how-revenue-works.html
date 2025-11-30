@@ -269,11 +269,16 @@
     });
   })();
 
+  <!-- Chart + fetch: resilient replacement -->
+<script>
   // ---------- Chart.js pie chart with fetch fallback (uses /api/admin-stats) ----------
   (function(){
-    const ctx = document.getElementById('revenuePie').getContext('2d');
+    // safe context retrieval
+    const canvasEl = document.getElementById('revenuePie');
+    const ctx = canvasEl && canvasEl.getContext ? canvasEl.getContext('2d') : null;
+
     // default data (40% / 60%)
-    let data = {
+    const defaultData = {
       labels: ['Donations (40%)', 'Production & Growth (60%)'],
       datasets: [{
         data: [40, 60],
@@ -282,10 +287,9 @@
       }]
     };
 
-    // Chart config
     const config = {
       type: 'pie',
-      data: data,
+      data: defaultData,
       options: {
         responsive: true,
         plugins: {
@@ -295,14 +299,34 @@
       }
     };
 
-    const chart = new Chart(ctx, config);
+    let chart = null;
 
-    // update UI with last updated
+    function initChartIfAvailable() {
+      if (!ctx) return;
+      try {
+        if (typeof Chart !== 'undefined') {
+          chart = new Chart(ctx, config);
+        } else {
+          console.warn('Chart library not available — using static fallback.');
+          // hide canvas to avoid blank box and append a simple fallback element
+          try { canvasEl.style.display = 'none'; } catch(e){}
+          const parent = canvasEl.parentElement;
+          if (parent && !parent.querySelector('.chart-fallback')) {
+            const fallback = document.createElement('div');
+            fallback.className = 'chart-fallback';
+            fallback.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><svg width="120" height="120" viewBox="0 0 32 32" aria-hidden="true"><circle r="16" cx="16" cy="16" fill="transparent" stroke="#7fb3ff" stroke-width="32" stroke-dasharray="60 40" stroke-dashoffset="25"></circle></svg><div style="color:var(--muted);font-size:13px">Donations: 40%</div></div>';
+            parent.appendChild(fallback);
+          }
+        }
+      } catch (e) {
+        console.warn('Error initializing chart:', e);
+      }
+    }
+
     function setLastUpdated(ts){
       document.getElementById('last-updated').textContent = ts ? new Date(ts).toLocaleString() : '--';
     }
 
-    // Fetch admin-stats to populate KPIs & chart
     const adminEndpoint = '/api/admin-stats';
 
     async function fetchAdminStats(){
@@ -314,7 +338,6 @@
         if (!res.ok) throw new Error('no data from admin-stats');
         const json = await res.json();
 
-        // expected shape: { pending: 0, total_sales: 2017.00, total_reserved: 806.80, generated_at? }
         const totalSales = Number(json.total_sales || json.totalRevenue || 0);
         const totalReserved = Number(json.total_reserved || json.total_donated || (totalSales * 0.4));
         const pending = Number(json.pending || 0);
@@ -328,24 +351,39 @@
         document.getElementById('k_pending').textContent = pending > 0 ? '€ ' + pending.toFixed(2) : '—';
         setLastUpdated(ts);
 
-        // Update chart
-        const rest = 100 - donationPct;
-        chart.data.datasets[0].data = [donationPct, rest];
-        chart.data.labels = [`Donations (${donationPct}%)`, `Production & Growth (${rest}%)`];
-        chart.update();
+        // Update chart or fallback text
+        try {
+          const rest = 100 - donationPct;
+          if (chart && chart.data && chart.data.datasets) {
+            chart.data.datasets[0].data = [donationPct, rest];
+            chart.data.labels = [`Donations (${donationPct}%)`, `Production & Growth (${rest}%)`];
+            chart.update();
+          } else {
+            // update fallback text if exists
+            const parent = canvasEl ? canvasEl.parentElement : null;
+            if (parent) {
+              const txt = parent.querySelector('.chart-fallback div[style*="color:var(--muted)"]');
+              if (txt) txt.textContent = `Donations: ${donationPct}%`;
+            }
+          }
+        } catch (e) {
+          console.warn('Error updating chart UI:', e);
+        }
+
       } catch (err) {
         console.warn('admin-stats endpoint unreachable, using defaults.', err);
-        // fallback values already present in chart
         setLastUpdated(null);
       }
     }
 
-    // initial fetch
+    // init & fetch (chart init is safe; fetch runs regardless)
+    initChartIfAvailable();
     fetchAdminStats();
 
-    // optional: refresh every 5 minutes (uncomment if desired)
+    // optional refresh interval
     // setInterval(fetchAdminStats, 1000 * 60 * 5);
   })();
-  </script>
+</script>
+<!-- end resilient chart block -->
 </body>
 </html>
