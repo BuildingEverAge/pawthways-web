@@ -6,7 +6,7 @@
   <title>How it works — Revenue Model (Pawthways)</title>
   <meta name="description" content="Transparency: how Pawthways generates revenue and how 40% is allocated to animal rescues. Interactive dashboard and visual flow." />
   <!-- Chart.js CDN -->
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <!-- Chart.js CDN removed (some browsers block third-party storage). If you want Chart locally, please add /assets/js/chart.umd.min.js -->
   <style>
     :root{
       --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#ffb86b; --white:#eef2f7;
@@ -26,24 +26,35 @@
     .cta{display:inline-block;padding:10px 14px;border-radius:10px;background:var(--accent);color:#0b1220;text-decoration:none;font-weight:600}
     footer{color:var(--muted);font-size:13px;margin-top:18px}
     pre.note{background:#07111a;padding:12px;border-radius:8px;color:var(--muted);overflow:auto}
-    /* Responsive */
     @media (max-width:980px){.grid{grid-template-columns:1fr}.wrap{padding:18px}}
     table{width:100%;border-collapse:collapse;margin-top:10px}
     th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.04);text-align:left;color:var(--muted)}
     th{color:var(--white);font-weight:600}
-    /* Tooltip styling for SVG */
-    .svg-tooltip{
-      position:fixed;pointer-events:none;padding:8px 10px;border-radius:8px;background:#07111a;color:var(--muted);font-size:13px;border:1px solid rgba(255,255,255,0.03);z-index:60;display:none;
-    }
-    /* small helper */
+    .svg-tooltip{position:fixed;pointer-events:none;padding:8px 10px;border-radius:8px;background:#07111a;color:var(--muted);font-size:13px;border:1px solid rgba(255,255,255,0.03);z-index:60;display:none;}
     .muted{color:var(--muted)}
     .kpiRow{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
     .kpiBox{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;min-width:140px}
     .kpiBox .label{color:var(--muted);font-size:13px}
     .kpiBox .value{font-weight:700;font-size:18px;margin-top:6px}
+    .section-title {margin-top:12px;margin-bottom:6px;font-size:18px}
+    .small {font-size:14px;color:var(--muted)}
+    .impact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px}
+    .impact-card{background:rgba(255,255,255,0.02);padding:12px;border-radius:8px}
   </style>
 </head>
 <body>
+  <script>
+  // Shim temporal para evitar ReferenceError si Chart.js está bloqueado.
+  if (typeof Chart === 'undefined') {
+    window.Chart = function(ctx, config){
+      // constructor shim: guarda datos mínimos y una update() vacía para que el código que llama no rompa.
+      this.data = (config && config.data) ? config.data : { datasets: [] };
+      this.update = function(){ /* noop */ };
+    };
+    console.warn('Chart shim injected: Chart.js not available (temporary).');
+  }
+</script>
+
   <main class="wrap" role="main">
     <header>
       <div>
@@ -56,7 +67,19 @@
       </div>
     </header>
 
-    <!-- Intro KPI row from admin-stats -->
+    <!-- INTRO (integrated copy) -->
+    <section id="introduction" class="card full" aria-labelledby="intro-title">
+      <h2 id="intro-title">Introduction to the Revenue Model</h2>
+      <p class="small">
+        Your trust is what allows us to save lives. That's why we want you to know exactly how we generate and manage the revenue that powers this project and, most importantly, how those funds directly impact animal rescue.
+      </p>
+      <p class="small">
+        Pawthways operates on a simple, transparent two-rail system: <strong>Commercial Revenue</strong> (sales of digital products and future upsells) and a fixed <strong>Charitable Allocation</strong> (40% of revenue is donated to verified animal welfare causes). We keep these rails separate so every user can see where money comes from and where it goes.
+      </p>
+      <p class="muted">This page explains the flow, the exact distribution, and how we report it publicly.</p>
+    </section>
+
+    <!-- KPIs -->
     <section class="card full" aria-labelledby="kpi-summary">
       <h2 id="kpi-summary">Quick numbers (live)</h2>
       <div class="kpiRow" id="kpiRow">
@@ -77,7 +100,7 @@
           <div class="value" id="k_pending">—</div>
         </div>
       </div>
-      <p class="muted" style="margin-top:10px">These numbers come from the server (endpoint <code>/api/admin-stats</code>). If unavailable the visualizations fall back to default 40/60.</p>
+      <p class="small" style="margin-top:10px">These numbers come from the server endpoint <code>/api/admin-stats</code>. If unavailable the visualizations fall back to default 40/60.</p>
     </section>
 
     <!-- TOP: flow + chart -->
@@ -145,21 +168,80 @@
       </aside>
     </section>
 
-    <!-- Explanation & Implementation -->
-    <section class="card full" aria-labelledby="impl-title">
+    <!-- Sources of Income -->
+    <section id="sources" class="card full" aria-labelledby="sources-title">
+      <h3 id="sources-title">Sources of Income</h3>
+      <p class="small">Pawthways generates revenue primarily through the sale of digital products and educational resources. Every product includes materials that empower users to create similar content and business models.</p>
+      <ul class="small">
+        <li><strong>Product Sales:</strong> artbooks, AI packs, music and creation resources.</li>
+        <li><strong>Upsells & Merchandising:</strong> higher-tier content, future digital collectibles or merchandise.</li>
+        <li><strong>Indirect Donations:</strong> 40% of revenue is allocated to charitable causes — this acts as the donations channel.</li>
+      </ul>
+
+      <div class="section-title">How income is generated</div>
+      <p class="small">Sales are processed through our platform (Whop). Each purchase funds both project growth and charitable allocations. Every product includes behind-the-scenes material so the community can learn and reproduce our process.</p>
+    </section>
+
+    <!-- Revenue distribution -->
+    <section id="distribution" class="card full" aria-labelledby="distribution-title">
+      <h3 id="distribution-title">Revenue Distribution</h3>
+      <p class="small">We split revenue into two clear rails:</p>
+
+      <table aria-describedby="distribution-title">
+        <thead><tr><th>Allocation</th><th>Percentage</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td>Charitable Causes</td><td>40%</td><td>Direct funding of verified NGOs: rescue, vet care, rehabilitation, feeding, housing.</td></tr>
+          <tr><td>Production & Growth</td><td>60%</td><td>Content creation, team, marketing, product development, platform ops.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="section-title">Transparency in Distribution</div>
+      <p class="small">We publish transaction-level aggregates on the Transparency page and provide monthly reports. No personal data of donors is published; only aggregated numbers and proof documents (receipts, invoices) linked via secure URLs.</p>
+    </section>
+
+    <!-- Example impact -->
+    <section id="impact" class="card full" aria-labelledby="impact-title">
+      <h3 id="impact-title">Example impact (illustrative)</h3>
+      <div class="impact-grid">
+        <div class="impact-card">
+          <strong>€30</strong>
+          <div class="small">≈ 3 days of feeding for a small shelter dog</div>
+        </div>
+        <div class="impact-card">
+          <strong>€100</strong>
+          <div class="small">≈ basic medical check & vaccine for one dog</div>
+        </div>
+        <div class="impact-card">
+          <strong>€500</strong>
+          <div class="small">≈ emergency surgery / rehabilitation support</div>
+        </div>
+      </div>
+      <p class="muted" style="margin-top:10px">These examples help donors understand the real-world effect of the 40% charitable allocation.</p>
+    </section>
+
+    <!-- Implementation & data -->
+    <section id="implementation" class="card full" aria-labelledby="impl-title">
       <h3 id="impl-title">Technical implementation & data</h3>
       <ol>
         <li>We use the existing public endpoint: <code>/api/admin-stats</code>. It returns aggregated numbers used by the chart (see below).</li>
         <li>The chart attempts to fetch real data; if unavailable it falls back to a 40% / 60% default.</li>
-        <li>Do not expose PII: the public view must return only aggregated values and recent transfers without personal data.</li>
+        <li>Public views only expose aggregated values and proof documents (no PII).</li>
       </ol>
-      <pre class="note">NOTE: allocate and audit_donations_log already run in the backend; this page only reads aggregates to show public transparency.</pre>
+      <pre class="note">NOTE: allocate and audit_donations_log already run in the backend; this page only reads aggregates to show public transparency. For integration with NGOs see the webhook spec in our docs.</pre>
+    </section>
+
+    <!-- CTA -->
+    <section id="cta" class="card full">
+      <h3>Get involved</h3>
+      <p class="small">See our products, learn how we operate, and help animals by purchasing one of our packs. Every purchase contributes to real rescues.</p>
+      <a class="cta" href="/products.html">See products</a>
+      <a style="margin-left:10px;color:var(--muted)" href="/transparency.html">View transparency dashboard</a>
     </section>
 
     <footer>
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
         <div>© Pawthways — Transparency & responsibility.</div>
-        <div class="muted">Base documentation: revenue model and operational checklist.</div>
+        <div class="muted">Documentation: revenue model and operational checklist.</div>
       </div>
     </footer>
   </main>
@@ -199,84 +281,122 @@
     });
   })();
 
-  // ---------- Chart.js pie chart with fetch fallback (uses /api/admin-stats) ----------
-  (function(){
-    const ctx = document.getElementById('revenuePie').getContext('2d');
-    // default data (40% / 60%)
-    let data = {
-      labels: ['Donations (40%)', 'Production & Growth (60%)'],
-      datasets: [{
-        data: [40, 60],
-        backgroundColor: ['#ff8b8b', '#7fb3ff'],
-        hoverOffset: 8
-      }]
-    };
+    <!-- Chart + fetch: resilient replacement -->
+  <script>
+    // ---------- Chart.js pie chart with fetch fallback (uses /api/admin-stats) ----------
+    (function(){
+      const canvasEl = document.getElementById('revenuePie');
+      const ctx = canvasEl && canvasEl.getContext ? canvasEl.getContext('2d') : null;
 
-    // Chart config
-    const config = {
-      type: 'pie',
-      data: data,
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: 'bottom', labels: { color: '#e6eef7' } },
-          tooltip: { bodyColor: '#e6eef7', titleColor: '#fff' }
+      const defaultData = {
+        labels: ['Donations (40%)', 'Production & Growth (60%)'],
+        datasets: [{
+          data: [40, 60],
+          backgroundColor: ['#ff8b8b', '#7fb3ff'],
+          hoverOffset: 8
+        }]
+      };
+
+      const config = {
+        type: 'pie',
+        data: defaultData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#e6eef7' } },
+            tooltip: { bodyColor: '#e6eef7', titleColor: '#fff' }
+          }
+        }
+      };
+
+      let chart = null;
+
+      function initChartIfAvailable() {
+        if (!ctx) return;
+        try {
+          if (typeof Chart !== 'undefined') {
+            chart = new Chart(ctx, config);
+          } else {
+            console.warn('Chart library not available — using static fallback.');
+            try { if (canvasEl) canvasEl.style.display = 'none'; } catch(e){}
+            const parent = canvasEl ? canvasEl.parentElement : null;
+            if (parent && !parent.querySelector('.chart-fallback')) {
+              const fallback = document.createElement('div');
+              fallback.className = 'chart-fallback';
+              fallback.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;gap:6px"><svg width="120" height="120" viewBox="0 0 32 32" aria-hidden="true"><circle r="16" cx="16" cy="16" fill="transparent" stroke="#7fb3ff" stroke-width="32" stroke-dasharray="60 40" stroke-dashoffset="25"></circle></svg><div style="color:var(--muted);font-size:13px">Donations: 40%</div></div>';
+              parent.appendChild(fallback);
+            }
+          }
+        } catch (e) {
+          console.warn('Error initializing chart:', e);
         }
       }
-    };
 
-    const chart = new Chart(ctx, config);
-
-    // update UI with last updated
-    function setLastUpdated(ts){
-      document.getElementById('last-updated').textContent = ts ? new Date(ts).toLocaleString() : '--';
-    }
-
-    // Fetch admin-stats to populate KPIs & chart
-    const adminEndpoint = '/api/admin-stats';
-
-    async function fetchAdminStats(){
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(()=> controller.abort(), 3500);
-        const res = await fetch(adminEndpoint, {signal: controller.signal});
-        clearTimeout(timeoutId);
-        if (!res.ok) throw new Error('no data from admin-stats');
-        const json = await res.json();
-
-        // expected shape: { pending: 0, total_sales: 2017.00, total_reserved: 806.80, timestamp? }
-        const totalSales = Number(json.total_sales || json.totalRevenue || 0);
-        const totalReserved = Number(json.total_reserved || json.total_donated || (totalSales * 0.4));
-        const pending = Number(json.pending || 0);
-        const ts = json.timestamp || new Date().toISOString();
-
-        // Update KPI elements
-        document.getElementById('k_total_revenue').textContent = totalSales > 0 ? '€ ' + totalSales.toFixed(2) : '—';
-        document.getElementById('k_total_reserved').textContent = totalReserved > 0 ? '€ ' + totalReserved.toFixed(2) : '—';
-        const donationPct = totalSales > 0 ? Math.round((totalReserved / totalSales) * 100) : 40;
-        document.getElementById('k_donation_pct').textContent = donationPct + '%';
-        document.getElementById('k_pending').textContent = pending > 0 ? '€ ' + pending.toFixed(2) : '—';
-        setLastUpdated(ts);
-
-        // Update chart
-        const rest = 100 - donationPct;
-        chart.data.datasets[0].data = [donationPct, rest];
-        chart.data.labels = [`Donations (${donationPct}%)`, `Production & Growth (${rest}%)`];
-        chart.update();
-      } catch (err) {
-        console.warn('admin-stats endpoint unreachable, using defaults.', err);
-        // fallback values already present in chart
-        setLastUpdated(null);
-        // leave KPI placeholders as '—'
+      function setLastUpdated(ts){
+        const el = document.getElementById('last-updated');
+        if (el) el.textContent = ts ? new Date(ts).toLocaleString() : '--';
       }
-    }
 
-    // initial fetch
-    fetchAdminStats();
+      const adminEndpoint = '/api/admin-stats';
 
-    // optional: refresh every 5 minutes (uncomment if desired)
-    // setInterval(fetchAdminStats, 1000 * 60 * 5);
-  })();
+      async function fetchAdminStats(){
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(()=> controller.abort(), 3500);
+          const res = await fetch(adminEndpoint, {signal: controller.signal});
+          clearTimeout(timeoutId);
+          if (!res.ok) throw new Error('no data from admin-stats');
+          const json = await res.json();
+
+          const totalSales = Number(json.total_sales || json.totalRevenue || 0);
+          const totalReserved = Number(json.total_reserved || json.total_donated || (totalSales * 0.4));
+          const pending = Number(json.pending || 0);
+          const ts = json.generated_at || json.timestamp || null;
+
+          const elTotal = document.getElementById('k_total_revenue');
+          if (elTotal) elTotal.textContent = totalSales > 0 ? '€ ' + Number(totalSales).toFixed(2) : '—';
+          const elReserved = document.getElementById('k_total_reserved');
+          if (elReserved) elReserved.textContent = totalReserved > 0 ? '€ ' + Number(totalReserved).toFixed(2) : '—';
+          const elPct = document.getElementById('k_donation_pct');
+          const donationPct = totalSales > 0 ? Math.round((totalReserved / totalSales) * 100) : 40;
+          if (elPct) elPct.textContent = donationPct + '%';
+          const elPending = document.getElementById('k_pending');
+          if (elPending) elPending.textContent = pending > 0 ? '€ ' + pending.toFixed(2) : '—';
+          setLastUpdated(ts);
+
+          try {
+            const rest = 100 - donationPct;
+            if (chart && chart.data && chart.data.datasets) {
+              chart.data.datasets[0].data = [donationPct, rest];
+              chart.data.labels = [`Donations (${donationPct}%)`, `Production & Growth (${rest}%)`];
+              chart.update();
+            } else {
+              const parent = canvasEl ? canvasEl.parentElement : null;
+              if (parent) {
+                const txt = parent.querySelector('.chart-fallback div[style*="color:var(--muted)"]');
+                if (txt) txt.textContent = `Donations: ${donationPct}%`;
+              }
+            }
+          } catch (e) {
+            console.warn('Error updating chart UI:', e);
+          }
+
+        } catch (err) {
+          console.warn('admin-stats endpoint unreachable, using defaults.', err);
+          setLastUpdated(null);
+        }
+      }
+
+      // init & fetch
+      initChartIfAvailable();
+      fetchAdminStats();
+
+      // optional refresh interval
+      // setInterval(fetchAdminStats, 1000 * 60 * 5);
+    })();
   </script>
+  <!-- end resilient chart block -->
 </body>
 </html>
+
+<!-- redeploy: force -->
