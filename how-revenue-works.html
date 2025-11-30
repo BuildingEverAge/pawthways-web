@@ -43,6 +43,18 @@
   </style>
 </head>
 <body>
+  <script>
+  // Shim temporal para evitar ReferenceError si Chart.js está bloqueado.
+  if (typeof Chart === 'undefined') {
+    window.Chart = function(ctx, config){
+      // constructor shim: guarda datos mínimos y una update() vacía para que el código que llama no rompa.
+      this.data = (config && config.data) ? config.data : { datasets: [] };
+      this.update = function(){ /* noop */ };
+    };
+    console.warn('Chart shim injected: Chart.js not available (temporary).');
+  }
+</script>
+
   <main class="wrap" role="main">
     <header>
       <div>
@@ -386,3 +398,5 @@
   <!-- end resilient chart block -->
 </body>
 </html>
+
+<!-- redeploy: force -->
