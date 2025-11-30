@@ -262,7 +262,18 @@ async function loadKPIs() {
         totalDonatedEl.textContent = totalReserved > 0 ? `€ ${fmtCurr(totalReserved)}` : '0';
         totalRescuesEl.textContent = salesCount ? String(salesCount) : (totalSales ? String(Math.round(totalSales)) : '0');
         fundedRescuesEl.textContent = `${pctReserved}% reserved`;
-        lastUpdatedEl.textContent = payload.timestamp || payload.generated_at || 'Never';
+        const rawDate = payload.timestamp || payload.generated_at || null;
+if (rawDate) {
+  const d = new Date(rawDate);
+  lastUpdatedEl.textContent = d.toLocaleDateString('en-GB', {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit'
+  });
+} else {
+  lastUpdatedEl.textContent = 'Never';
+}
+
         return;
       }
 
