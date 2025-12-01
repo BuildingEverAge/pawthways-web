@@ -1,4 +1,4 @@
-$json = @'
+@'
 {
   "version": 2,
   "builds": [
@@ -11,6 +11,5 @@ $json = @'
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }
-'@
+'@ | Out-File -FilePath vercel.json -Encoding utf8
 
-Set-Content -Path vercel.json -Value $json -Encoding UTF8
