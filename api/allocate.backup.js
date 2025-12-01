@@ -1,3 +1,6 @@
+﻿import { requireAdmin } from '../lib/require-admin.js';
+if (!requireAdmin(req, res)) return;
+
 // api/allocate.js
 import { createClient } from '@supabase/supabase-js';
 
@@ -82,7 +85,7 @@ export default async function handler(req, res) {
     if (results.length) {
       const auditRows = results.map(d => ({
         donation_id: d.id,
-        sale_id: d.sale_id,                 // añadimos sale_id explícito
+        sale_id: d.sale_id,                 // aÃ±adimos sale_id explÃ­cito
         action: 'allocated',
         actor: 'system.allocate',
         meta: { amount: d.amount, currency: d.currency } // plain JS object -> JSONB
@@ -96,10 +99,11 @@ export default async function handler(req, res) {
 
         if (auditErr) {
           console.error('Failed to insert audit rows', auditErr);
-          // no hacemos fail total por auditoría
+          // no hacemos fail total por auditorÃ­a
         }
       } catch (ae) {
         console.error('Unexpected audit insert error', ae);
       }
     }
+
 

@@ -1,3 +1,6 @@
+﻿import { requireAdmin } from '../lib/require-admin.js';
+if (!requireAdmin(req, res)) return;
+
 // api/allocate.js (debug-capable, full-flow)
 import { createClient } from '@supabase/supabase-js';
 
@@ -133,7 +136,7 @@ export default async function handler(req, res) {
 
     // Fallback: if RPC didn't return rows, try single-row RPC insert calls (idempotent)
     if ((!Array.isArray(results) || results.length === 0)) {
-      console.warn('Fallback: RPC returned no results — trying one-by-one via RPC');
+      console.warn('Fallback: RPC returned no results â€” trying one-by-one via RPC');
       const fallbackResults = [];
       for (const row of inserts) {
         try {
@@ -159,7 +162,7 @@ export default async function handler(req, res) {
     // --- RECONCILE: if still no results, re-query donations for candidate sale_ids ---
     if (!Array.isArray(results) || results.length === 0) {
       try {
-        console.log('RECONCILE: results empty — re-query donations for candidate sale_ids');
+        console.log('RECONCILE: results empty â€” re-query donations for candidate sale_ids');
         const candidateIds = inserts.map(r => r.sale_id);
         const { data: existingNow, error: existingNowErr } = await supa
           .from('donations')
@@ -179,7 +182,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 6) AUDIT + cálculo fiable: calcular totalAllocated desde la tabla donations para las sale_ids procesadas
+    // 6) AUDIT + cÃ¡lculo fiable: calcular totalAllocated desde la tabla donations para las sale_ids procesadas
 
     // Construimos lista de sale_ids procesadas a partir de `results` (maneja varios shapes)
     const processedSaleIds = (Array.isArray(results) ? results.map(r => (r.sale_id || r.sale_id_out || r.saleId || (r['sale_id']))) : []);
@@ -206,7 +209,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // Fallback: si no obtuvimos nada de la BD, intentamos calcular desde `results` con normalización
+    // Fallback: si no obtuvimos nada de la BD, intentamos calcular desde `results` con normalizaciÃ³n
     if (totalAllocated === 0 && Array.isArray(results) && results.length) {
       const normalized = results.map(r => {
         const amountCandidates = [r.amount, r.amount_out, r.amountOut, (r.meta && r.meta.amount)];
@@ -230,9 +233,9 @@ export default async function handler(req, res) {
       if (!donationsRows.length) donationsRows = normalized;
     }
 
-    // AUDIT: delegamos la creación de logs al trigger de la base de datos.
-    // Evitamos insertar auditorías desde el backend para no producir filas nulas o duplicadas.
-    // Mostramos un sample para debugging, el trigger DB (db.trigger.donations) será el encargado real.
+    // AUDIT: delegamos la creaciÃ³n de logs al trigger de la base de datos.
+    // Evitamos insertar auditorÃ­as desde el backend para no producir filas nulas o duplicadas.
+    // Mostramos un sample para debugging, el trigger DB (db.trigger.donations) serÃ¡ el encargado real.
     console.log('AUDIT: delegating audit insertion to DB trigger. donationsRows sample:', (donationsRows || []).slice(0,10));
 
     // Responder con totals usando el total calculado
@@ -247,3 +250,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: err.message || 'internal' });
   }
 }
+

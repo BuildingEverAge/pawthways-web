@@ -1,3 +1,6 @@
+﻿import { requireAdmin } from '../lib/require-admin.js';
+if (!requireAdmin(req, res)) return;
+
 // api/debug-supabase.js
 import { createClient } from '@supabase/supabase-js';
 
@@ -23,3 +26,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: String(e) });
   }
 }
+

@@ -1,3 +1,6 @@
+﻿import { requireAdmin } from '../lib/require-admin.js';
+if (!requireAdmin(req, res)) return;
+
 // api/mark-donation-sent.js (production hardened)
 // - acepta token por header: x-admin-token OR Authorization: Bearer <token>
 // - no acepta token en body
@@ -128,3 +131,4 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: e.message || 'internal' });
   }
 }
+
