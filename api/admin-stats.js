@@ -1,13 +1,14 @@
 // api/admin-stats.js
 import { createClient } from '@supabase/supabase-js';
+import { requireAdmin } from '../lib/require-admin.js'; // <-- nueva importación
 
 const supa = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'only GET' });
 
-  // opcional: proteger con header
-  // if (req.headers['x-admin-token'] !== process.env.ADMIN_TOKEN) return res.status(401).json({ error: 'unauthorized' });
+  // PROTECCIÓN: requiere ADMIN_TOKEN (header Bearer o ?admin_token=...)
+  if (!requireAdmin(req, res)) return;
 
   try {
     // 1) ventas (id + amount)
@@ -38,14 +39,11 @@ export default async function handler(req, res) {
     const donatedSaleIds = new Set((donations || []).map(d => String(d.sale_id)));
     const pending = (sales || []).filter(s => !donatedSaleIds.has(String(s.id))).length;
 
-        return res.status(200).json({
+    return res.status(200).json({
       pending,
       total_sales,
       total_reserved,
-      // campo de fecha que el frontend usa para mostrar "Last updated"
       generated_at: new Date().toISOString(),
-
-      // opcional pero útil: número total de ventas (para mostrar en UI si se desea)
       sales_count: (sales || []).length
     });
   } catch (e) {
