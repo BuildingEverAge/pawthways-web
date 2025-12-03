@@ -1,3 +1,47 @@
+2025-12-03 — Resolución del 404 / Cómo se intentó servir how-revenue-works.html
+Acciones completadas
+
+Se verificó que how-revenue-works.html existía localmente.
+
+Se verificó que el archivo estaba correctamente en Git.
+
+Se verificó que el archivo estaba presente en origin/main.
+
+Se movió el archivo desde la raíz a la carpeta public/.
+
+Se realizó commit del movimiento del archivo.
+
+Se ejecutó git push origin main para desplegar los cambios.
+
+Se forzó un redeploy en Vercel mediante un commit vacío.
+
+Se instaló y utilizó Vercel CLI en la máquina local.
+
+Se listaron los deployments con vercel list.
+
+Se intentó obtener logs de Vercel con vercel logs (runtime logs).
+
+Se confirmó que los logs runtime no mostraban errores relevantes.
+
+Se comprobó que el archivo seguía generando error 404 desde Vercel.
+
+Se creó un backup local mediante git stash push -u -m "backup: before fixing vercel.json routing".
+
+Se reemplazó vercel.json por la configuración mínima:
+
+{ "version": 2, "cleanUrls": true, "trailingSlash": false }
+
+
+Se ejecutó git add vercel.json, commit y push con el mensaje de corrección de rutas.
+
+Se añadió un comentario a public/how-revenue-works.html para forzar detección en el build.
+
+Se realizó commit y push del cambio para el redeploy forzado.
+
+Tras el redeploy, se verificó nuevamente la ruta pública y se observó que el 404 persistía.
+
+
+
 2025-12-03 — Fix: Restoring Supabase + Vercel API Functionality
 
 Brief description:
