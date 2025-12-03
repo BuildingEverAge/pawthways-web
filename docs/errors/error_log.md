@@ -278,8 +278,57 @@ Prevention: Enforce single-source-of-truth functions.
 
 ---
 
+## ✅ ERROR 404 RESUELTO COMPLETAMENTE
+
+Description: Todos los dominios devolvían 404 NOT_FOUND para endpoints API.
+Cause: vercel.json tenía configuración incorrecta con builds que no funcionaban con ES6 modules.
+Fix: Se eliminó vercel.json completamente para usar auto-detección de Vercel.
+Prevention: Para proyectos estáticos con API routes, dejar que Vercel detecte automáticamente.
+
+---
+
+## ✅ ENDPOINTS API FUNCIONANDO
+
+Description: admin-stats y transparency-proofs devolvían errores de API key y conexión.
+Cause: transparency-proofs usaba SUPABASE_ANON_KEY vacía y admin-stats tenía variables de entorno mal configuradas.
+Fix: Se configuró transparency-proofs.js para usar SUPABASE_SERVICE_ROLE_KEY y se verificaron las variables de entorno.
+Prevention: Siempre verificar que las variables de entorno estén correctamente configuradas antes de deploy.
+
+---
+
+## ✅ PÁGINA DE TRANSPARENCIA COMPLETA
+
+Description: how-revenue-works.html tenía enlaces rotos a páginas inexistentes.
+Cause: Los CTAs apuntaban a /products.html y /transparency-dashboard.html que no existen.
+Fix: Se corrigieron todos los enlaces para apuntar a /shop.html y /transparency.html.
+Prevention: Siempre verificar que las páginas de destino existan antes de actualizar enlaces.
+
+---
+
+## ✅ SISTEMA DE PRUEBAS VISUALES FUNCIONANDO
+
+Description: La página no mostraba las pruebas de transparencia.
+Cause: El endpoint /api/transparency-proofs no tenía datos o la tabla no existía.
+Fix: Se creó la tabla public_proofs en Supabase y se insertaron 6 pruebas reales con thumbnails y PDFs.
+Prevention: Mantener siempre datos de prueba en desarrollo para verificar el flujo completo.
+
+---
+
 ### **Summary:**
 
-The **error log** now includes all technical, small, and flow errors that we encountered throughout the project. It ensures that every problem is documented to avoid repetition of any issues and to improve stability moving forward.
+El **error log** ahora incluye todos los errores técnicos, pequeños y de flujo que encontramos durante el proyecto. Asegura que cada problema esté documentado para evitar repetición de problemas y mejorar la estabilidad hacia adelante.
+
+**Estado Actual del Proyecto:**
+- ✅ Error 404 resuelto
+- ✅ Endpoints API funcionando
+- ✅ Página de transparencia completa y funcional
+- ✅ Sistema de pruebas visuales operativo
+- ✅ Todos los enlaces corregidos y verificados
+
+**Próximos Pasos Recomendados:**
+1. Medir conversiones del CTA "Buy a pack — we donate 40%"
+2. Contactar micro-influencers con el sistema funcionando
+3. Monitorear KPIs en tiempo real
+4. Escalar el sistema de pruebas y transparencia
 
 This comprehensive record helps in preventing future errors and ensures the project runs smoothly with fewer disruptions.
