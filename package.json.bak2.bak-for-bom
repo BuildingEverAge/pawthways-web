@@ -1,7 +1,6 @@
 ﻿{
     "name":  "pawthways-web",
     "version":  "1.0.0",
-    "private":  true,
     "type":  "module",
     "dependencies":  {
                          "@supabase/supabase-js":  "^2.84.0",
@@ -9,6 +8,6 @@
                          "node-fetch":  "^3.3.2"
                      },
     "scripts":  {
-                    "fix-vercel":  "node scripts/fix-vercel.cjs"
+                    "vercel-build":  "echo Building static site"
                 }
 }
