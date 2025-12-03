@@ -1,4 +1,4 @@
-﻿/* api/admin-stats.js - handler estable para Vercel - FIXED VERSION */
+/* api/admin-stats.js - handler estable para Vercel - FIXED VERSION */
 
 import { createClient } from '@supabase/supabase-js';
 

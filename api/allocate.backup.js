@@ -1,4 +1,4 @@
-﻿import { requireAdmin } from '../lib/require-admin.js';
+import { requireAdmin } from '../lib/require-admin.js';
 if (!requireAdmin(req, res)) return;
 
 // api/allocate.js
