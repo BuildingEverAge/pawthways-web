@@ -3,7 +3,7 @@ import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
   const SUPABASE_URL = process.env.SUPABASE_URL;
-  const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY; // or use a read-only key
+  const SUPABASE_ANON_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY; // use service role key for now
   try {
     const r = await fetch(`${SUPABASE_URL}/rest/v1/public_proofs_view?select=id,title,thumb_url,doc_url,proof_date&order=proof_date.desc`, {
       headers: {
