@@ -1,0 +1,345 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Pawthways — Rescue Detail</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <noscript>
+      <link rel="stylesheet" href="assets/css/noscript.css" />
+    </noscript>
+  </head>
+  <body class="is-preload">
+    <!-- Wrapper -->
+    <div id="wrapper" class="divided">
+
+
+      <!-- HERO -->
+      <section
+        class="banner style1 orient-left content-align-left image-position-right onload-image-fade-in onload-content-fade-right"
+      >
+        <div class="content">
+          <h1 id="hero-title">Rescue Details</h1>
+          <p class="major" id="hero-subtitle">
+            Here you can see the full story, goal and status of a single rescue.
+            This page is powered directly from our rescue database — no fake numbers,
+            no invented stories.
+          </p>
+          <ul class="actions stacked">
+            <li>
+              <a href="watch-and-help.html" class="button">
+                Back to Watch &amp; Help
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="image">
+          <img
+            src="images/paw-hero.jpg"
+            alt="Pawthways rescue"
+          />
+        </div>
+      </section>
+
+
+      <!-- RESCUE DETAIL -->
+      <section id="rescue" class="wrapper style1 align-center">
+        <div class="inner">
+          <h2 id="rescue-heading">Loading rescue…</h2>
+          <p id="rescue-status">
+            Preparing this rescue's story…
+          </p>
+
+          <div id="rescue-detail" class="items style1 medium">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+      </section>
+
+
+      <!-- FOOTER -->
+      <footer class="wrapper style1 align-center">
+        <div class="inner">
+          <p>Pawthways — Turning one leap into thousands of second chances.</p>
+        </div>
+      </footer>
+    </div>
+
+
+    <!-- Supabase JS -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2.49.1/dist/umd/supabase.min.js"></script>
+
+    <!-- Template JS -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery.scrollex.min.js"></script>
+    <script src="assets/js/jquery.scrolly.min.js"></script>
+    <script src="assets/js/browser.min.js"></script>
+    <script src="assets/js/breakpoints.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/main.js"></script>
+
+
+    <!-- Pawthways: Single rescue logic -->
+    <script>
+      // Same Supabase config as other pages
+      const SUPABASE_URL = "https://fjlonwabqmbzkprddqsv.supabase.co";
+      const SUPABASE_ANON_KEY = "";
+
+      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+      function formatDate(isoString) {
+        if (!isoString) return "";
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return "";
+        return d.toLocaleDateString("en-GB", {
+          year: "numeric",
+          month: "short",
+          day: "2-digit",
+        });
+      }
+
+      function escapeHtml(str) {
+        if (!str) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function getRescueIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        // Prefer rescue_id; fall back to id
+        return params.get("rescue_id") || params.get("id") || null;
+      }
+
+      async function loadRescue() {
+        const headingEl = document.getElementById("rescue-heading");
+        const statusEl = document.getElementById("rescue-status");
+        const detailEl = document.getElementById("rescue-detail");
+        const heroTitleEl = document.getElementById("hero-title");
+        const heroSubtitleEl = document.getElementById("hero-subtitle");
+
+        if (!headingEl || !statusEl || !detailEl) {
+          return;
+        }
+
+        const rescueId = getRescueIdFromUrl();
+
+        if (!rescueId) {
+          headingEl.textContent = "No rescue selected";
+          statusEl.textContent =
+            "You reached this page without selecting a specific rescue. Go back to Watch & Help and choose a rescue first.";
+          detailEl.innerHTML = `
+            <section class="spotlight style1 orient-left content-align-left image-position-center">
+              <div class="content">
+                <ul class="actions stacked">
+                  <li>
+                    <a href="watch-and-help.html" class="button primary">
+                      Back to Watch &amp; Help
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </section>
+          `;
+          if (heroTitleEl) heroTitleEl.textContent = "Rescue not selected";
+          if (heroSubtitleEl) {
+            heroSubtitleEl.textContent =
+              "To see a full rescue story, go back to Watch & Help and choose a specific case.";
+          }
+          return;
+        }
+
+        headingEl.textContent = "Loading rescue…";
+        statusEl.textContent = "Fetching this rescue's story from our database…";
+
+        try {
+          const { data, error } = await supabaseClient
+            .from("rescues")
+            .select(
+              "id, title, animal_name, location, story, image_url, target_amount, currency, status, created_at"
+            )
+            .eq("id", rescueId)
+            .single();
+
+          if (error) {
+            console.error("Error loading rescue:", error);
+            headingEl.textContent = "We could not load this rescue";
+            statusEl.textContent =
+              "Something went wrong while loading this rescue. Please try again later or go back to Watch & Help.";
+            detailEl.innerHTML = `
+              <section class="spotlight style1 orient-left content-align-left image-position-center">
+                <div class="content">
+                  <ul class="actions stacked">
+                    <li>
+                      <a href="watch-and-help.html" class="button primary">
+                        Back to Watch &amp; Help
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </section>
+            `;
+            return;
+          }
+
+          if (!data) {
+            headingEl.textContent = "Rescue not found";
+            statusEl.textContent =
+              "We couldn't find a rescue with that ID. It may have been removed or never existed.";
+            detailEl.innerHTML = `
+              <section class="spotlight style1 orient-left content-align-left image-position-center">
+                <div class="content">
+                  <ul class="actions stacked">
+                    <li>
+                      <a href="watch-and-help.html" class="button primary">
+                        Back to Watch &amp; Help
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+              </section>
+            `;
+            return;
+          }
+
+          // If we reach here, we have a rescue
+          const title = escapeHtml(data.title || "Rescue case");
+          const animal = escapeHtml(data.animal_name || "");
+          const location = escapeHtml(data.location || "");
+          const story = escapeHtml(data.story || "");
+          const status = escapeHtml(data.status || "active");
+          const createdDate = formatDate(data.created_at);
+          const goal =
+            data.target_amount != null
+              ? `Goal: ${data.target_amount} ${data.currency || ""}`
+              : "";
+          const imgHtml = data.image_url
+            ? `
+              <div class="image">
+                <img src="${data.image_url}" alt="${title}" />
+              </div>
+            `
+            : "";
+
+          if (heroTitleEl) heroTitleEl.textContent = title;
+          if (heroSubtitleEl) {
+            heroSubtitleEl.textContent =
+              "Below you can see this rescue's story, goal and current status. All data comes directly from our database.";
+          }
+
+          const subtitleParts = [];
+          if (animal) subtitleParts.push(`<strong>${animal}</strong>`);
+          if (location) subtitleParts.push(location);
+          const subtitle = subtitleParts.join(" · ");
+
+          headingEl.textContent = title;
+          statusEl.textContent = subtitle || "Rescue details below.";
+
+          // Placeholder progress block (no fake numbers)
+          const progressHtml = data.target_amount != null
+            ? `
+              <div class="progress-container" style="margin: 1rem 0;">
+                <div class="progress-info" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem;">
+                  <span>${goal}</span>
+                  <span style="color: #666; font-style: italic;">Tracking coming soon</span>
+                </div>
+                <div class="progress-bar" style="
+                  width: 100%;
+                  height: 8px;
+                  background-color: #f0f0f0;
+                  border-radius: 4px;
+                  overflow: hidden;
+                ">
+                  <div class="progress-fill" style="
+                    width: 0%;
+                    height: 100%;
+                    background-color: #E2574C;
+                    transition: width 0.3s ease;
+                  "></div>
+                </div>
+              </div>
+            `
+            : `
+              <div class="progress-container" style="margin: 1rem 0;">
+                <p style="font-size: 0.9rem; color: #666;">
+                  Goal not defined yet — this rescue is still being configured.
+                </p>
+              </div>
+            `;
+
+          detailEl.innerHTML = `
+            <section class="spotlight style1 orient-left content-align-left image-position-center">
+              ${imgHtml}
+              <div class="content">
+                ${
+                  subtitle
+                    ? `<p>${subtitle}</p>`
+                    : "<p><em>No extra details provided yet.</em></p>"
+                }
+                ${progressHtml}
+                ${
+                  story
+                    ? `<p>${story}</p>`
+                    : "<p><em>The full story for this rescue has not been written yet.</em></p>"
+                }
+                <p>
+                  <small>
+                    Status: <strong>${status}</strong>
+                    ${
+                      createdDate
+                        ? ` · Created on ${createdDate}`
+                        : ""
+                    }
+                  </small>
+                </p>
+                <ul class="actions stacked">
+                  <li>
+                    <a href="donate.html#donation-methods" class="button primary">
+                      Donate to this rescue
+                    </a>
+                  </li>
+                  <li>
+                    <a href="watch-and-help.html" class="button">
+                      Back to Watch &amp; Help
+                    </a>
+                  </li>
+                  <li>
+                    <a href="transparency.html#logs" class="button">
+                      See transparency logs
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </section>
+          `;
+        } catch (err) {
+          console.error("Unexpected error loading rescue:", err);
+          headingEl.textContent = "We could not load this rescue";
+          statusEl.textContent =
+            "Something went wrong while loading this rescue. Please try again later.";
+          detailEl.innerHTML = `
+            <section class="spotlight style1 orient-left content-align-left image-position-center">
+              <div class="content">
+                <ul class="actions stacked">
+                  <li>
+                    <a href="watch-and-help.html" class="button primary">
+                      Back to Watch &amp; Help
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </section>
+          `;
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", loadRescue);
+    </script>
+  </body>
+</html>

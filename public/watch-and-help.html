@@ -1,0 +1,299 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Pawthways — Watch & Help</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, user-scalable=no"
+    />
+    <link rel="stylesheet" href="assets/css/main.css" />
+    <noscript>
+      <link rel="stylesheet" href="assets/css/noscript.css" />
+    </noscript>
+  </head>
+  <body class="is-preload">
+    <!-- Wrapper -->
+    <div id="wrapper" class="divided">
+
+      <!-- HERO -->
+      <section
+        class="banner style1 orient-left content-align-left image-position-right onload-image-fade-in onload-content-fade-right"
+      >
+        <div class="content">
+          <h1>Watch & Help</h1>
+          <p class="major">
+            Real cases. Real animals. Transparent goals.
+            Every card below is powered directly from our rescue database —
+            no fake stories, no invisible money.
+          </p>
+          <ul class="actions stacked">
+            <li>
+              <a href="/index.html" class="button smooth-scroll-middle">
+                Read the origin story
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="image">
+          <img
+            src="images/paw-hero.jpg"
+            alt="Pawthways rescue"
+          />
+        </div>
+      </section>
+
+      <!-- WATCH THE STORY & HELP -->
+      <section class="wrapper style1 align-center">
+        <div class="inner">
+          <h2>Watch the Story & Help</h2>
+          <p>
+            Watching and sharing this story amplifies our reach and supports
+            our pledge to fund real rescues featured on Pawthways.
+          </p>
+          <div
+            style="
+              position:relative;
+              padding-bottom:56.25%;
+              height:0;
+              overflow:hidden;
+              border-radius:16px;
+              max-width:960px;
+              margin:0 auto;
+            "
+          >
+            <iframe
+              src="https://www.youtube.com/embed/sRBxWGkS_bg?rel=0&modestbranding=1"
+              title="The Bottle That Carried Us — Pawthways"
+              frameborder="0"
+              allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              allowfullscreen
+              style="
+                position:absolute;
+                top:0;
+                left:0;
+                width:100%;
+                height:100%;
+                border:0;
+              "
+            ></iframe>
+          </div>
+        </div>
+      </section>
+
+      <!-- ACTIVE RESCUES LIST (Supabase-powered) -->
+      <section id="active-rescues" class="wrapper style1 align-center">
+        <div class="inner">
+          <h2>Active Rescues You Can Help Now</h2>
+          <p id="rescues-status">
+            Loading verified cases...
+          </p>
+
+          <div id="rescues-wrapper">
+  <div id="rescues-list"></div>
+</div>
+            <!-- Cards will be injected here by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- WHY THIS MATTERS / CTA -->
+      <section class="wrapper style3 align-center">
+        <div class="inner">
+          <h2>Why this matters</h2>
+          <p>
+            Pawthways connects emotional stories with verifiable impact.
+            When a rescue is funded or completed, you'll see it reflected here
+            and in our Transparency page.
+          </p>
+          <ul class="actions stacked">
+            <li>
+              <a href="#active-rescues" class="button primary">
+                Support the next rescue
+              </a>
+            </li>
+            <li>
+              <a href="/index.html" class="button">
+                Relive the Pawthways story
+              </a>
+            </li>
+            <li>
+              <a href="/transparency.html" class="button">
+                See Transparency
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- FOOTER -->
+      <footer class="wrapper style1 align-center">
+        <div class="inner">
+          <p>Pawthways — Turning one leap into thousands of second chances.</p>
+        </div>
+      </footer>
+    </div>
+    <!-- Template JS -->
+    <script src="assets/js/jquery.min.js"></script>
+    <script src="assets/js/jquery.scrollex.min.js"></script>
+    <script src="assets/js/jquery.scrolly.min.js"></script>
+    <script src="assets/js/browser.min.js"></script>
+    <script src="assets/js/breakpoints.min.js"></script>
+    <script src="assets/js/util.js"></script>
+    <script src="assets/js/main.js"></script>
+
+    <script>
+  // ---------- SANITIZE ----------
+  function escapeHtml(unsafe) {
+    if (unsafe == null) return "";
+    return String(unsafe)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  // ---------- PROGRESS ----------
+  function calculateProgress(rescue) {
+    const target = Number(rescue.target_amount || 0);
+    const donated = Number(rescue.total_donated || 0);
+    let pct = target > 0 ? Math.round((donated / target) * 100) : 0;
+    pct = Math.max(0, Math.min(100, pct));
+    return {
+      progress_pct: pct,
+      total_donated: donated,
+      currency: rescue.currency || ""
+    };
+  }
+
+  // ---------- SETTINGS & STATE (global to this script) ----------
+  const MAX_VISIBLE = 4; // visible at once
+  let visibleRescues = []; // array of rescue objects currently shown
+  let rescueQueue = [];    // rest of rescues waiting to be shown
+  let listEl = null;       // DOM container reference
+
+ // ---------- RENDER SINGLE CARD ----------
+  function renderRescueHTML(rescue) {
+    const progress = calculateProgress(rescue);
+
+    const imgHtml = rescue.image_url
+      ? `<div class="image"><img loading="lazy" src="${escapeHtml(rescue.image_url)}" alt="${escapeHtml(rescue.title || "Rescue")}" /></div>`
+      : "";
+
+    const goal = rescue.target_amount
+      ? `Goal: ${escapeHtml(String(rescue.target_amount))} ${escapeHtml(rescue.currency)}`
+      : "";
+
+    const snippet = rescue.story
+      ? (rescue.story.length > 220
+          ? escapeHtml(rescue.story.substring(0, 220)) + "…"
+          : escapeHtml(rescue.story))
+      : "";
+
+    return `
+      <section class="spotlight style1 orient-left content-align-left image-position-center rescue-card"
+               data-id="${escapeHtml(rescue.id)}">
+        ${imgHtml}
+        <div class="content">
+          <h3>${escapeHtml(rescue.title || "Rescue case")}</h3>
+          <p>${rescue.animal_name ? `<strong>${escapeHtml(rescue.animal_name)}</strong> · ` : ""}${escapeHtml(rescue.location || "")}</p>
+          ${goal ? `<p class="goal">${goal}</p>` : ""}
+          <div class="progress-container">
+            <div class="progress-info">
+              <span>Donated: ${progress.total_donated.toFixed(2)} ${escapeHtml(progress.currency)}</span>
+              <span>${progress.progress_pct}% funded</span>
+            </div>
+            <div class="progress-bar" aria-hidden="true">
+              <div class="progress-fill" style="width:${progress.progress_pct}%;"></div>
+            </div>
+          </div>
+          ${snippet ? `<p class="snippet">${snippet}</p>` : ""}
+          <a href="donate.html#donation-methods" class="button primary card-button" rel="noopener">Help this rescue</a>
+        </div>
+      </section>
+    `;
+  }
+
+  // ---------- APPEND NEXT CARD (from JS queue) ----------
+  function appendRescueCard(rescue) {
+    if (!listEl || !rescue) return;
+    visibleRescues.push(rescue);
+    listEl.insertAdjacentHTML("beforeend", renderRescueHTML(rescue));
+  }
+
+  // ---------- REMOVE CARD (by id) and add next if exists ----------
+  function removeRescueCard(id) {
+    // Remove from DOM
+    const card = document.querySelector(`[data-id="${String(id)}"]`);
+    if (card) card.remove();
+
+    // Remove from visibleRescues array
+    visibleRescues = visibleRescues.filter(r => String(r.id) !== String(id));
+
+    // Add next from queue if available
+    if (rescueQueue.length > 0) {
+      const next = rescueQueue.shift();
+      appendRescueCard(next);
+    }
+  }
+
+  // ---------- SWEEP: remove any visible rescues that reached 100% ----------
+  function sweepCompleted() {
+    // collect ids to remove (avoid mutating while iterating)
+    const toRemove = visibleRescues
+      .filter(r => Number(calculateProgress(r).progress_pct) >= 100)
+      .map(r => r.id);
+
+    toRemove.forEach(id => {
+      // ensure we don't try to remove twice
+      if (document.querySelector(`[data-id="${String(id)}"]`)) {
+        removeRescueCard(id);
+      }
+    });
+  }
+
+  // ---------- FETCH + INITIALIZE ----------
+  async function loadActiveRescues() {
+    const statusEl = document.getElementById("rescues-status");
+    listEl = document.getElementById("rescues-list");
+    if (!statusEl || !listEl) return;
+
+    statusEl.textContent = "Loading verified cases...";
+
+    let data;
+    try {
+      const URL = "https://fjlonwabqmbzkprddqsv.supabase.co/functions/v1/rescues";
+      const resp = await fetch(URL, { cache: "no-cache" });
+      if (!resp.ok) throw new Error("Network response was not ok: " + resp.status);
+      data = await resp.json();
+    } catch (err) {
+      console.error("Error loading rescues", err);
+      statusEl.innerHTML = `We could not load rescues right now. <button id="retry-rescues" class="button">Reintentar</button>`;
+      document.getElementById("retry-rescues")?.addEventListener("click", loadActiveRescues);
+      return;
+    }
+
+    // Filter out already completed items (safety)
+    data = (Array.isArray(data) ? data : []).filter(r => Number(calculateProgress(r).progress_pct) < 100);
+
+    // Initialize visible and queue (NO global limit on total)
+    visibleRescues = data.slice(0, MAX_VISIBLE);
+    rescueQueue = data.slice(MAX_VISIBLE);
+
+    // render initial visible cards
+    statusEl.textContent = "";
+    listEl.innerHTML = visibleRescues.map(r => renderRescueHTML(r)).join("");
+
+    // Initial sweep, then periodic sweep every 10s
+    sweepCompleted();
+    setInterval(sweepCompleted, 1000);
+  }
+
+  // Expose removeRescueCard to window so you can call it from other code if needed
+  window.removeRescueCard = removeRescueCard;
+
+  document.addEventListener("DOMContentLoaded", loadActiveRescues);
+</script>
+  </body>
+</html>
