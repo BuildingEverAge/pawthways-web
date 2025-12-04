@@ -290,7 +290,7 @@
   // Chart shim (keeps resilient behaviour)
   if (typeof Chart === 'undefined') {
     window.Chart = function(ctx, config){ this.data = (config && config.data) ? config.data : { datasets: [] }; this.update = function(){}; };
-    console.warn('Chart shim injected: Chart.js not available.');
+    /* Chart shim injected (silenced) */
   }
   // SVG tooltip logic (same as yours)
   (function(){
@@ -426,6 +426,7 @@ a.appendChild(img);
   <script src="/assets/js/revenue-init-prod.js"></script>
 </body>
 </html>
+
 
 
 
