@@ -7,7 +7,6 @@
   <meta name="description" content="Transparency: how Pawthways generates revenue and how 40% is allocated to animal rescues. Interactive dashboard and proof documents." />
   <script>
 (function(){
-  // Intentar usar archivo local si ya fue incluido por el HTML
   function loadCDN() {
     if (window._chartCdnLoaded) return;
     var s = document.createElement('script');
@@ -18,22 +17,17 @@
     document.head.appendChild(s);
   }
 
-  // Si Chart ya está disponible (archivo local), no hacemos nada.
   if (typeof Chart === 'undefined') {
-    // comprobar si el archivo local existe haciendo una petición HEAD (cuidado CORS, pero en tu dominio funcionará)
     fetch('/assets/js/chart.umd.min.js', { method: 'HEAD' }).then(r => {
       if (r.ok) {
-        // local disponible -> cargarlo inserto (ó dejar que la etiqueta <script> original lo haga)
         var s = document.createElement('script');
         s.src = '/assets/js/chart.umd.min.js';
         s.defer = true;
         document.head.appendChild(s);
       } else {
-        // local no disponible -> CDN
         loadCDN();
       }
     }).catch(()=> {
-      // Si falla la comprobación (CORS/otros), carga CDN
       loadCDN();
     });
   }
@@ -41,10 +35,11 @@
 </script>
   <style>
     :root{
-      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#ffb86b; --white:#eef2f7;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-
-      /* SVG / charts / tooltips */
+      --bg:#0f1724; 
+      --card:#0b1220; 
+      --muted:#9aa4b2; 
+      --accent:#ffb86b; 
+      --white:#eef2f7;
       --svg-node-bg:#aee1ef;
       --svg-node-text:#0b1220;
       --svg-node-charity:#ffb3b3;
@@ -54,9 +49,9 @@
       --chart-production:#7fb3ff;
       --tooltip-bg:#07111a;
       --tooltip-border:rgba(255,255,255,0.03);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
 
-    /* Light theme */
     [data-theme="light"] {
       --bg:#f8fafc;
       --card:#ffffff;
@@ -77,7 +72,48 @@
     html,body{height:100%;transition:background-color 0.3s ease, color 0.3s ease}
     body{margin:0;background:var(--bg);color:var(--white);line-height:1.45;-webkit-font-smoothing:antialiased}
     .wrap{max-width:1100px;margin:32px auto;padding:24px}
-    header{display:flex;gap:20px;align-items:center;flex-wrap:wrap;position:relative}
+    
+    /* Header mejorado con mejor layout */
+    header{
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:20px;
+      align-items:start;
+      margin-bottom:12px;
+    }
+    
+    .header-main{
+      grid-column:1;
+      min-width:0;
+    }
+    
+    .header-actions{
+      grid-column:2;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:flex-end;
+    }
+    
+    @media (max-width:768px){
+      header{
+        grid-template-columns:1fr;
+      }
+      .header-actions{
+        grid-column:1;
+        flex-direction:row;
+        justify-content:space-between;
+        align-items:center;
+        width:100%;
+      }
+      .last-updated-box{
+        order:1;
+      }
+      .theme-toggle{
+        order:2;
+      }
+    }
+    
     h1{margin:.2em 0 0;font-size:26px}
     p.lead{color:var(--muted);margin-top:6px}
     .card{background:linear-gradient(180deg, rgba(128,128,128,0.05), rgba(128,128,128,0.02));padding:18px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.15);margin:16px 0;transition:box-shadow 0.3s ease}
@@ -106,7 +142,7 @@
     .impact-card{background:rgba(128,128,128,0.08);padding:12px;border-radius:8px;transition:background 0.3s ease}
     .badge{background:rgba(255,184,107,0.15);color:var(--accent);padding:8px 12px;border-radius:999px;font-weight:700}
     [data-theme="light"] .badge{background:rgba(249,115,22,0.15)}
-    .top-row{display:flex;gap:12px;align-items:center;width:100%}
+    .top-row{display:flex;gap:12px;align-items:center;width:100%;flex-wrap:wrap}
     .proofs{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
     .proof-thumb{width:80px;height:60px;border-radius:8px;object-fit:cover;background:var(--tooltip-bg);border:1px solid var(--tooltip-border);transition:transform 0.2s ease}
     .proof-thumb:hover{transform:scale(1.05)}
@@ -115,11 +151,8 @@
     .proof-card{display:flex;gap:8px;align-items:center}
     .muted-plain{color:var(--muted);font-size:13px}
 
-    /* Theme Toggle Button */
+    /* Theme Toggle - Reposicionado y mejorado */
     .theme-toggle{
-      position:absolute;
-      top:8px;
-      right:8px;
       background:var(--card);
       border:1px solid var(--tooltip-border);
       border-radius:8px;
@@ -131,21 +164,73 @@
       font-size:14px;
       color:var(--white);
       transition:all 0.2s ease;
-      z-index:100;
+      white-space:nowrap;
     }
-    .theme-toggle:hover{background:rgba(128,128,128,0.1);transform:translateY(-1px)}
-    .theme-toggle:focus{outline:2px solid var(--accent);outline-offset:2px}
-    .theme-icon{width:18px;height:18px;fill:currentColor}
+    .theme-toggle:hover{
+      background:rgba(128,128,128,0.1);
+      transform:translateY(-1px);
+    }
+    .theme-toggle:focus{
+      outline:2px solid var(--accent);
+      outline-offset:2px;
+    }
+    .theme-icon{
+      width:18px;
+      height:18px;
+      fill:currentColor;
+      flex-shrink:0;
+    }
 
-    /* SVG improvements */
-    #flow-svg text{font-size:12px;pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
-    #flow-svg .node circle{transition:all 0.3s ease}
-    #flow-svg .node:hover circle{filter:brightness(1.1);stroke:var(--accent);stroke-width:2}
+    /* Last Updated Box */
+    .last-updated-box{
+      text-align:right;
+    }
+    .last-updated-label{
+      font-size:13px;
+      color:var(--muted);
+    }
+    .last-updated-value{
+      font-weight:700;
+      margin-top:4px;
+      color:var(--white);
+    }
+
+    /* SVG mejoras - texto más grande y adaptativo */
+    #flow-svg text{
+      font-size:14px;
+      font-weight:700;
+      pointer-events:none;
+      text-anchor:middle;
+      /* Usamos fill con variable CSS para adaptar al tema */
+      fill:var(--white);
+      text-shadow:
+        0 1px 3px rgba(0,0,0,0.5),
+        0 0 8px rgba(0,0,0,0.3);
+    }
+    
+    /* En modo claro, invertimos el texto para mejor contraste */
+    [data-theme="light"] #flow-svg text{
+      fill:var(--white);
+      text-shadow:
+        0 1px 2px rgba(0,0,0,0.3),
+        0 0 6px rgba(0,0,0,0.2);
+    }
+    
+    #flow-svg .node circle{
+      transition:all 0.3s ease;
+      stroke:transparent;
+      stroke-width:0;
+    }
+    #flow-svg .node:hover circle{
+      filter:brightness(1.15);
+      stroke:var(--accent);
+      stroke-width:2.5;
+    }
 
     @media (max-width:600px){
-      #flow-svg text{font-size:10px}
-      .theme-toggle{font-size:0;padding:8px}
-      .theme-toggle .theme-icon{margin:0}
+      #flow-svg text{font-size:11px}
+      .theme-toggle .theme-label{display:none}
+      .theme-toggle{padding:8px}
     }
   </style>
   <script type="application/ld+json">
@@ -162,7 +247,7 @@
 <body>
   <main class="wrap" role="main">
     <header>
-      <div style="flex:1">
+      <div class="header-main">
         <h1>How it works — Revenue Model (Pawthways)</h1>
         <p class="lead">Full transparency: how Pawthways generates revenue and how 40% is allocated to verified rescues. Real numbers, proof documents and up-to-date KPIs.</p>
         <div style="margin-top:10px" class="top-row">
@@ -171,23 +256,24 @@
         </div>
       </div>
 
-      <div style="text-align:right">
-        <div style="font-size:13px;color:var(--muted)">Last updated</div>
-        <div id="last-updated-large" style="font-weight:700;margin-top:6px">—</div>
-        <div class="share-buttons" style="margin-top:12px">
-          <!-- Simple share links -->
-          <a id="share-twitter" title="Share on Twitter" style="color:var(--muted);text-decoration:none">Share</a>
+      <div class="header-actions">
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle light/dark theme" aria-pressed="false" type="button">
+          <svg class="theme-icon" aria-hidden="true" viewBox="0 0 24 24">
+            <path id="sunIcon" d="M12 18a6 6 0 100-12 6 6 0 000 12zM12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
+            <path id="moonIcon" style="display:none" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+          <span class="theme-label">Theme</span>
+        </button>
+        
+        <div class="last-updated-box">
+          <div class="last-updated-label">Last updated</div>
+          <div class="last-updated-value" id="last-updated-large">—</div>
+        </div>
+        
+        <div class="share-buttons">
+          <a id="share-twitter" title="Share on Twitter" style="color:var(--muted);text-decoration:none;font-size:14px">Share</a>
         </div>
       </div>
-
-      <!-- Theme toggle button (inserted into header) -->
-      <button id="themeToggle" class="theme-toggle" aria-label="Toggle light/dark theme" aria-pressed="false" type="button">
-        <svg class="theme-icon" aria-hidden="true" viewBox="0 0 24 24">
-          <path id="sunIcon" d="M12 18a6 6 0 100-12 6 6 0 000 12zM12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
-          <path id="moonIcon" style="display:none" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-        </svg>
-        <span class="theme-label">Theme</span>
-      </button>
     </header>
 
     <!-- INTRO -->
@@ -198,7 +284,6 @@
       </p>
       <p class="muted">This page contains the flow diagram, live KPIs (when available), distribution breakdown, example impacts and proof documents.</p>
       <div class="proofs" id="proofs">
-        <!-- Proof thumbnails will be injected here. If none, a placeholder appears -->
         <div class="muted-plain">Most recent proofs: </div>
       </div>
     </section>
@@ -231,39 +316,48 @@
       <article class="card" aria-labelledby="flow-title">
         <h3 id="flow-title">Revenue generation & distribution flow</h3>
         <p class="muted" style="margin-top:6px">Hover / tap the nodes to see details. Click proofs to inspect receipts.</p>
-        <div style="width:100%;height:300px;margin-top:12px">
-          <!-- SVG flow updated to use CSS variables -->
+        <div style="width:100%;height:320px;margin-top:12px">
           <svg id="flow-svg" viewBox="0 0 1000 300" role="img" aria-label="Interactive revenue flow diagram" style="width:100%;height:100%">
-            <!-- Nodes: identical to original but with variables -->
+            <!-- Nodos con texto mejorado y multi-línea -->
             <g class="node" data-title="Digital product sales" data-desc="Sales of products on Whop (artbooks, AI packs, music)">
-              <circle cx="170" cy="200" r="40" fill="var(--svg-node-bg)"></circle>
-              <text x="170" y="210" font-size="13" font-weight="700" text-anchor="middle" fill="var(--svg-node-text)">Digital Product Sales</text>
+              <circle cx="170" cy="200" r="42" fill="var(--svg-node-bg)"></circle>
+              <text x="170" y="195">Digital</text>
+              <text x="170" y="211">Products</text>
             </g>
+            
             <g class="node" data-title="Whop (platform)" data-desc="Payment processing platform.">
-              <circle cx="420" cy="120" r="46" fill="var(--svg-node-bg)"></circle>
-              <text x="420" y="128" font-size="13" font-weight="700" text-anchor="middle" fill="var(--svg-node-text)">Whop</text>
+              <circle cx="420" cy="120" r="48" fill="var(--svg-node-bg)"></circle>
+              <text x="420" y="125">Whop</text>
             </g>
+            
             <g class="node" data-title="Generated revenue" data-desc="Revenue registered in the DB (sales).">
-              <circle cx="620" cy="120" r="64" fill="var(--svg-node-bg)"></circle>
-              <text x="620" y="118" font-size="13" font-weight="700" text-anchor="middle" fill="var(--svg-node-text)">Generated Revenue</text>
+              <circle cx="620" cy="120" r="66" fill="var(--svg-node-bg)"></circle>
+              <text x="620" y="115">Generated</text>
+              <text x="620" y="131">Revenue</text>
             </g>
+            
             <g class="node" data-title="Donations (40%)" data-desc="40% redirected to verified NGOs (rescue, vet care, rehab)">
-              <circle cx="920" cy="200" r="54" fill="var(--svg-node-charity)"></circle>
-              <text x="920" y="208" font-size="13" font-weight="700" text-anchor="middle" fill="var(--svg-node-text)">Charitable Causes (40%)</text>
+              <circle cx="920" cy="200" r="56" fill="var(--svg-node-charity)"></circle>
+              <text x="920" y="192">Charitable</text>
+              <text x="920" y="208">Causes (40%)</text>
             </g>
+            
             <g class="node" data-title="Production & growth (60%)" data-desc="60% for team, marketing and content production">
-              <circle cx="160" cy="30" r="48" fill="var(--svg-node-production)"></circle>
-              <text x="160" y="36" font-size="13" font-weight="700" text-anchor="middle" fill="var(--svg-node-text)">Production & Growth (60%)</text>
+              <circle cx="160" cy="30" r="50" fill="var(--svg-node-production)"></circle>
+              <text x="160" y="25">Production</text>
+              <text x="160" y="41">(60%)</text>
             </g>
+            
             <defs>
               <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto">
                 <path d="M0,0 L10,5 L0,10 z" fill="var(--svg-arrow)"></path>
               </marker>
             </defs>
-            <path d="M210 195 C300 170 360 140 380 135" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
-            <path d="M470 120 C540 120 580 120 610 120" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
-            <path d="M680 150 C760 170 820 185 870 195" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
-            <path d="M680 100 C560 70 300 48 220 48" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
+            
+            <path d="M210 195 C300 170 360 140 375 132" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
+            <path d="M470 120 C540 120 580 120 608 120" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
+            <path d="M685 145 C760 170 820 185 868 195" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
+            <path d="M680 100 C560 70 300 48 208 46" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
           </svg>
         </div>
       </article>
@@ -336,17 +430,17 @@
         <li>Proof documents are served from <code>/api/transparency-proofs</code> (public view); each proof contains a secure URL to the invoice/receipt.</li>
         <li>This page reads aggregates only - no PII is published.</li>
       </ol>
-      <pre class="note">NOTE: allocate and audit_donations_log run backend. This page reads public views only. <!-- TODO: ensure public view 'public_sales_view' is available --> </pre>
+      <pre class="note">NOTE: allocate and audit_donations_log run backend. This page reads public views only.</pre>
     </section>
 
     <!-- FAQ -->
     <section class="card full" aria-labelledby="faq-title">
       <h3 id="faq-title">FAQ — quick answers</h3>
       <div class="faq">
-        <p><strong>How can I verify that the 40% donation is real?</strong> — Every month we publish receipts and proof documents (see the “Proofs” section). The public transparency view also shows the exact reserved amount. You can download all proof documents anytime.</p>
-<p><strong>Where does the money go?</strong> — To verified animal welfare organizations (rescue, veterinary care, rehabilitation, feeding). The names and links appear inside each proof document.</p>
-<p><strong>Can I request a detailed report?</strong> — Yes. Contact us at <a href="mailto:contact@pawthways.example" style="color:var(--accent)">contact@pawthways.example</a> and we’ll provide one.</p>
-
+        <p><strong>How can I verify that the 40% donation is real?</strong> — Every month we publish receipts and proof documents (see the "Proofs" section). The public transparency view also shows the exact reserved amount. You can download all proof documents anytime.</p>
+        <p><strong>Where does the money go?</strong> — To verified animal welfare organizations (rescue, veterinary care, rehabilitation, feeding). The names and links appear inside each proof document.</p>
+        <p><strong>Can I request a detailed report?</strong> — Yes. Contact us at <a href="mailto:contact@pawthways.example" style="color:var(--accent)">contact@pawthways.example</a> and we'll provide one.</p>
+      </div>
     </section>
 
     <section id="cta" class="card full">
@@ -367,152 +461,7 @@
   <div id="svgTooltip" class="svg-tooltip" role="tooltip" aria-hidden="true"></div>
 
   <script>
-  // Chart shim (keeps resilient behaviour)
-  if (typeof Chart === 'undefined') {
-    window.Chart = function(ctx, config){ this.data = (config && config.data) ? config.data : { datasets: [] }; this.update = function(){}; };
-    /* Chart shim injected (silenced) */
-  }
-  // SVG tooltip logic (same as yours but updated strong color)
-  (function(){
-    const svg = document.getElementById('flow-svg');
-    const tooltip = document.getElementById('svgTooltip');
-    function showTooltip(evt, title, desc) {
-      const clientX = evt.clientX || (evt.touches && evt.touches[0] && evt.touches[0].clientX) || 0;
-      const clientY = evt.clientY || (evt.touches && evt.touches[0] && evt.touches[0].clientY) || 0;
-      tooltip.style.left = (clientX + 12) + 'px';
-      tooltip.style.top = (clientY + 12) + 'px';
-      tooltip.innerHTML = '<strong style="color:var(--white)">' + title + '</strong><div style="margin-top:6px;font-size:13px">' + desc + '</div>';
-      tooltip.style.display = 'block';
-      tooltip.setAttribute('aria-hidden','false');
-    }
-    function hideTooltip(){ tooltip.style.display = 'none'; tooltip.setAttribute('aria-hidden','true'); }
-    if (svg) {
-      svg.querySelectorAll('.node').forEach(g => {
-        const title = g.getAttribute('data-title') || '';
-        const desc = g.getAttribute('data-desc') || '';
-        g.style.cursor = 'pointer';
-        g.addEventListener('mousemove', (e)=> showTooltip(e, title, desc));
-        g.addEventListener('mouseleave', hideTooltip);
-        g.addEventListener('touchstart', (e)=> { e.preventDefault(); showTooltip(e.touches[0], title, desc); }, {passive:false});
-        g.addEventListener('touchend', hideTooltip);
-      });
-    }
-  })();
-
-  // Chart + fetch + proofs fetch
-  (function(){
-    const canvasEl = document.getElementById('revenuePie');
-    const ctx = canvasEl && canvasEl.getContext ? canvasEl.getContext('2d') : null;
-    const defaultData = {
-      labels: ['Donations (40%)', 'Production & Growth (60%)'],
-      datasets: [{ data: [40,60], backgroundColor: [getComputedStyle(document.documentElement).getPropertyValue('--chart-donation').trim() || '#ff8b8b', getComputedStyle(document.documentElement).getPropertyValue('--chart-production').trim() || '#7fb3ff'], hoverOffset:8 }]
-    };
-    const config = { type:'pie', data: defaultData, options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--white').trim() || '#e6eef7'} }, tooltip:{ bodyColor:getComputedStyle(document.documentElement).getPropertyValue('--white').trim() || '#e6eef7', titleColor:getComputedStyle(document.documentElement).getPropertyValue('--white').trim() || '#fff' } } } };
-    let chart = null;
-    function initChartIfAvailable(){ 
-      if (!ctx) return; 
-      try{ 
-        chart = (typeof Chart !== 'undefined') ? new Chart(ctx, config) : null;
-        window.revenueChartInstance = chart;
-      }catch(e){ console.warn('chart init',e); } 
-    }
-    function setLastUpdated(ts){ const large = document.getElementById('last-updated-large'); const small = document.getElementById('last-updated'); if (large) large.textContent = ts ? new Date(ts).toLocaleString() : '--'; if (small) small.textContent = ts ? new Date(ts).toLocaleString() : '--'; }
-    async function fetchAdminStats(){
-      const adminEndpoint = '/api/admin-stats';
-      try {
-        const controller = new AbortController(); const timeoutId = setTimeout(()=> controller.abort(), 3500);
-        const res = await fetch(adminEndpoint, {signal: controller.signal});
-        clearTimeout(timeoutId);
-        if (!res.ok) throw new Error('no data: ' + res.status);
-        const json = await res.json().catch(()=>({}));
-        const totalSales = Number(json.total_sales || json.totalRevenue || 0);
-        const totalReserved = Number(json.total_reserved || json.total_donated || (totalSales * 0.4));
-        const pending = Number(json.pending || 0);
-        const ts = json.generated_at || json.timestamp || null;
-        document.getElementById('k_total_revenue').textContent = totalSales > 0 ? '€ ' + Number(totalSales).toFixed(2) : '—';
-        document.getElementById('k_total_reserved').textContent = totalReserved > 0 ? '€ ' + Number(totalReserved).toFixed(2) : '—';
-        const donationPct = totalSales > 0 ? Math.round((totalReserved / totalSales) * 100) : 40;
-        document.getElementById('k_donation_pct').textContent = donationPct + '%';
-        document.getElementById('k_pending').textContent = pending > 0 ? '€ ' + pending.toFixed(2) : '—';
-        setLastUpdated(ts);
-        try {
-          const rest = 100 - donationPct;
-          if (window.revenueChartInstance && window.revenueChartInstance.data && window.revenueChartInstance.data.datasets) {
-            window.revenueChartInstance.data.datasets[0].data = [donationPct, rest];
-            window.revenueChartInstance.data.labels = [`Donations (${donationPct}%)`, `Production & Growth (${rest}%)`];
-            // update colors in case theme changed
-            const isDark = (document.documentElement.getAttribute('data-theme') || 'dark') === 'dark';
-            window.revenueChartInstance.data.datasets[0].backgroundColor = isDark ? [getComputedStyle(document.documentElement).getPropertyValue('--chart-donation').trim()||'#ff8b8b', getComputedStyle(document.documentElement).getPropertyValue('--chart-production').trim()||'#7fb3ff'] : [getComputedStyle(document.documentElement).getPropertyValue('--chart-donation').trim()||'#ef4444', getComputedStyle(document.documentElement).getPropertyValue('--chart-production').trim()||'#3b82f6'];
-            try{ window.revenueChartInstance.update(); }catch(e){/* swallow */ }
-          } else if (chart && chart.data && chart.data.datasets) {
-            chart.data.datasets[0].data = [donationPct, rest];
-            chart.data.labels = [`Donations (${donationPct}%)`, `Production & Growth (${rest}%)`];
-            try{ chart.update(); }catch(e){/* swallow */ }
-          }
-        } catch(e){ console.warn('update chart UI', e); }
-      } catch (err) {
-        console.warn('admin-stats endpoint unreachable, using defaults.', err);
-        setLastUpdated(null);
-      }
-    }
-
-    // Fetch proofs (new): expects /api/transparency-proofs returning [{id,title,thumb_url,doc_url,date}]
-    async function fetchProofs(){
-      const el = document.getElementById('proofs');
-      const endpoint = '/api/transparency-proofs';
-      try {
-        const res = await fetch(endpoint, {cache:'no-store'});
-        if (!res.ok) throw new Error('no proofs');
-        const arr = await res.json();
-        if (!Array.isArray(arr) || arr.length===0) { el.insertAdjacentHTML('beforeend','<div class=\"muted-plain\">No proofs published yet.</div>'); return; }
-        arr.slice(0,6).forEach(p => {
-          const a = document.createElement('a'); a.href = p.doc_url || '#'; a.target = '_blank'; a.rel='noopener';
-          const img = document.createElement('img');
-          img.className = 'proof-thumb';
-          img.alt = p.title || 'proof';
-          img.loading = 'lazy';
-          img.src = p.thumb_url || '/assets/img/proof-placeholder.svg';
-          img.onerror = function() {
-            if (!this.dataset.fallback) {
-              this.dataset.fallback = '1';
-              this.src = '/assets/img/proof-placeholder.svg';
-            }
-          };
-          img.addEventListener('error', () => img.setAttribute('aria-hidden','true'));
-          a.appendChild(img);
-          el.appendChild(a);
-        });
-      } catch(e){
-        el.insertAdjacentHTML('beforeend','<div class=\"muted-plain\">Proofs unavailable.</div>');
-        console.warn('fetch proofs', e);
-      }
-    }
-
-    initChartIfAvailable();
-    fetchAdminStats();
-    fetchProofs();
-    // optional auto refresh
-    // setInterval(fetchAdminStats, 1000 * 60 * 5);
-  })();
-
-  // share link (simple)
-  (function(){
-    const shareText = encodeURIComponent("Pawthways: transparency-first model — we donate 40% of revenue to animal rescues. See how it works: ");
-    const url = encodeURIComponent(location.href);
-    const tw = document.getElementById('share-twitter');
-    if (tw) tw.href = `https://twitter.com/intent/tweet?text=${shareText}&url=${url}`;
-    // optionally add WhatsApp, FB links similarly
-  })();
-  </script>
-
-  <!-- Chart loader: intenta usar bundle local y cae al CDN si es necesario -->
-  <script src="/assets/js/chart-loader.js"></script>
-  <!-- Proof thumbnails fallback (safe, idempotente) -->
-  <script src="/assets/js/proof-fallback.js"></script><!-- Revenue chart (production) -->
-  <script src="/assets/js/revenue-init-prod.js"></script>
-
-  <!-- Theme toggle script (idempotente, placed after Chart loaders to allow chart instance update) -->
-  <script>
+  // Theme toggle FIRST - para aplicar tema antes de cargar chart
   (function(){
     if (window._themeToggleInitialized) return;
     window._themeToggleInitialized = true;
@@ -529,6 +478,7 @@
     const savedTheme = localStorage.getItem('pawthways-theme') || 'dark';
 
     function applyTheme(theme) {
+      console.log('theme-toggle: applying', theme);
       document.documentElement.setAttribute('data-theme', theme);
 
       if (theme === 'light') {
@@ -541,14 +491,22 @@
         btn.setAttribute('aria-pressed', 'false');
       }
 
+      // Update chart if exists
       if (window.revenueChartInstance && window.revenueChartInstance.data) {
         const isDark = theme === 'dark';
-        const colors = isDark ? [getComputedStyle(document.documentElement).getPropertyValue('--chart-donation').trim()||'#ff8b8b', getComputedStyle(document.documentElement).getPropertyValue('--chart-production').trim()||'#7fb3ff'] : [getComputedStyle(document.documentElement).getPropertyValue('--chart-donation').trim()||'#ef4444', getComputedStyle(document.documentElement).getPropertyValue('--chart-production').trim()||'#3b82f6'];
+        const colors = isDark ? ['#ff8b8b', '#7fb3ff'] : ['#ef4444', '#3b82f6'];
+        const textColor = isDark ? '#e6eef7' : '#0f172a';
+        
         window.revenueChartInstance.data.datasets[0].backgroundColor = colors;
-        if (window.revenueChartInstance.options && window.revenueChartInstance.options.plugins && window.revenueChartInstance.options.plugins.legend) {
-          window.revenueChartInstance.options.plugins.legend.labels.color = isDark ? getComputedStyle(document.documentElement).getPropertyValue('--white').trim()||'#e6eef7' : getComputedStyle(document.documentElement).getPropertyValue('--white').trim()||'#0f172a';
+        if (window.revenueChartInstance.options.plugins.legend) {
+          window.revenueChartInstance.options.plugins.legend.labels.color = textColor;
         }
-        try{ window.revenueChartInstance.update(); }catch(e){/* swallow */ }
+        if (window.revenueChartInstance.options.plugins.tooltip) {
+          window.revenueChartInstance.options.plugins.tooltip.bodyColor = textColor;
+          window.revenueChartInstance.options.plugins.tooltip.titleColor = textColor;
+        }
+        
+        try { window.revenueChartInstance.update(); } catch(e) { console.warn('chart update', e); }
       }
     }
 
@@ -560,7 +518,31 @@
       localStorage.setItem('pawthways-theme', next);
       applyTheme(next);
     });
+
+    console.log('theme-toggle: initialized with theme', savedTheme);
   })();
-  </script>
-</body>
-</html>
+
+  // Chart shim
+  if (typeof Chart === 'undefined') {
+    window.Chart = function(ctx, config){ 
+      this.data = (config && config.data) ? config.data : { datasets: [] }; 
+      this.options = (config && config.options) ? config.options : {};
+      this.update = function(){}; 
+    };
+  }
+  
+  // SVG tooltip
+  (function(){
+    const svg = document.getElementById('flow-svg');
+    const tooltip = document.getElementById('svgTooltip');
+    if (!svg || !tooltip) return;
+    
+    function showTooltip(evt, title, desc) {
+      const clientX = evt.clientX || (evt.touches && evt.touches[0] && evt.touches[0].clientX) || 0;
+      const clientY = evt.clientY || (evt.touches && evt.touches[0] && evt.touches[0].clientY) || 0;
+      tooltip.style.left = (clientX + 12) + 'px';
+      tooltip.style.top = (clientY + 12) + 'px';
+      tooltip.innerHTML = '<strong style="color:var(--white)">' + title + '</strong><div style="margin-top:6px;font-size:13px">' + desc + '</div>';
+      tooltip.style.display = 'block';
+      tooltip.style.opacity = '1';
+      tooltip.
