@@ -5,7 +5,40 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>How it works — Revenue Model (Pawthways)</title>
   <meta name="description" content="Transparency: how Pawthways generates revenue and how 40% is allocated to animal rescues. Interactive dashboard and proof documents." />
-  <script src="/assets/js/chart.umd.min.js"></script>
+  <script>
+(function(){
+  // Intentar usar archivo local si ya fue incluido por el HTML
+  function loadCDN() {
+    if (window._chartCdnLoaded) return;
+    var s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js';
+    s.defer = true;
+    s.onload = function(){ console.log('Chart.js CDN loaded'); window._chartCdnLoaded = true; };
+    s.onerror = function(){ console.error('Failed to load Chart.js CDN'); };
+    document.head.appendChild(s);
+  }
+
+  // Si Chart ya está disponible (archivo local), no hacemos nada.
+  if (typeof Chart === 'undefined') {
+    // comprobar si el archivo local existe haciendo una petición HEAD (cuidado CORS, pero en tu dominio funcionará)
+    fetch('/assets/js/chart.umd.min.js', { method: 'HEAD' }).then(r => {
+      if (r.ok) {
+        // local disponible -> cargarlo inserto (ó dejar que la etiqueta <script> original lo haga)
+        var s = document.createElement('script');
+        s.src = '/assets/js/chart.umd.min.js';
+        s.defer = true;
+        document.head.appendChild(s);
+      } else {
+        // local no disponible -> CDN
+        loadCDN();
+      }
+    }).catch(()=> {
+      // Si falla la comprobación (CORS/otros), carga CDN
+      loadCDN();
+    });
+  }
+})();
+</script>
   <style>
     :root{
       --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#ffb86b; --white:#eef2f7;
@@ -339,8 +372,28 @@
         if (!Array.isArray(arr) || arr.length===0) { el.insertAdjacentHTML('beforeend','<div class="muted-plain">No proofs published yet.</div>'); return; }
         arr.slice(0,6).forEach(p => {
           const a = document.createElement('a'); a.href = p.doc_url || '#'; a.target = '_blank'; a.rel='noopener';
-          const img = document.createElement('img'); img.className='proof-thumb'; img.alt = p.title || 'proof'; img.src = p.thumb_url || '/assets/img/proof-placeholder.png';
-          a.appendChild(img);
+          const img = document.createElement('img');
+img.className = 'proof-thumb';
+img.alt = p.title || 'proof';
+img.loading = 'lazy';
+
+// prefer thumb_url, fallback a placeholder si no existe
+img.src = p.thumb_url || '/assets/img/proof-placeholder.svg';
+
+// si la imagen falla (dominio roto, 404), reemplazamos por el placeholder local
+img.onerror = function() {
+  // evita bucles por si el placeholder también falla
+  if (!this.dataset.fallback) {
+    this.dataset.fallback = '1';
+    this.src = '/assets/img/proof-placeholder.svg';
+  }
+};
+
+// opcional: añadir aria-hidden si la imagen es decorativa cuando falla
+img.addEventListener('error', () => img.setAttribute('aria-hidden','true'));
+
+a.appendChild(img);
+;
           el.appendChild(a);
         });
       } catch(e){
