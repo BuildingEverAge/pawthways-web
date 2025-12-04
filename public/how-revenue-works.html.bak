@@ -407,7 +407,7 @@
       const clientY = evt.clientY || (evt.touches && evt.touches[0] && evt.touches[0].clientY) || 0;
       tooltip.style.left = (clientX + 12) + 'px';
       tooltip.style.top = (clientY + 12) + 'px';
-      tooltip.innerHTML = '<strong>' + title + '</strong><div style="margin-top:6px;font-size:13px">' + desc + '</div>' + title + '</strong><div style="margin-top:6px;font-size:13px">' + desc + '</div>';
+      tooltip.innerHTML = '<strong style="color:var(--white)">' + title + '</strong><div style="margin-top:6px;font-size:13px">' + desc + '</div>';
       tooltip.style.display = 'block';
       tooltip.setAttribute('aria-hidden','false');
     }
@@ -590,5 +590,4 @@
   </script>
 </body>
 </html>
-
 
