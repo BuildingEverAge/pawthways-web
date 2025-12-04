@@ -1,16 +1,15 @@
 ﻿/* revenue-init-prod.js
-   Robust revenue chart:
-   - espera Chart.js y canvas
-   - fetch a /api/admin-stats
-   - formato profesional (colores, tooltips, responsive)
+   Doughnut revenue chart with inside labels (chip style).
+   - espera Chart.js y canvas (#revenuePie preferido)
+   - fetch /api/admin-stats
+   - custom plugin para dibujar etiquetas blancas dentro de slices
    - idempotente
 */
 (function(){
-  const PAW_COLORS = {
-    primary: '#0b7b5b',    // puedes cambiar al branding
-    accent: '#ffb559',
-    muted: '#9aa4a6',
-    bg: '#ffffff'
+  const COLORS = {
+    pink: '#ff9b9b',
+    blue: '#7fb3ff',
+    muted: '#9aa4a6'
   };
 
   function waitForChartAndCanvas(id, cb, tries = 0) {
@@ -25,82 +24,143 @@
 
   function numberFormat(n){
     if (n === null || n === undefined) return '-';
-    return Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 }).format(n);
+    try { return Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 }).format(n); } catch(e) { return String(n); }
   }
 
-  function renderChart(canvas, data) {
+  // Plugin: draw white "chips" with value text centered inside each segment
+  const innerLabelPlugin = {
+    id: 'innerLabelPlugin',
+    afterDatasetsDraw(chart, args, options) {
+      const {ctx, chartArea: {width, height}} = chart;
+      const meta = chart.getDatasetMeta(0);
+      if (!meta || !meta.data) return;
+      meta.data.forEach((arc, i) => {
+        const dataset = chart.data.datasets[0];
+        const value = dataset.data[i];
+        // skip zero values
+        if (!value && value !== 0) return;
+        const center = arc.getCenterPoint ? arc.getCenterPoint() : {x: arc.x, y: arc.y};
+        // compute angle-based offset to put label roughly at middle of arc radius
+        const model = arc;
+        // radius for label = innerRadius + (outerRadius - innerRadius) * 0.6
+        const innerR = arc.innerRadius || (arc._model && arc._model.innerRadius) || (arc.r * 0.3);
+        const outerR = arc.outerRadius || (arc._model && arc._model.outerRadius) || arc.r;
+        const labelR = innerR + (outerR - innerR) * 0.6;
+
+        // compute angle center (Chart 4: arc.startAngle, arc.endAngle)
+        const startAngle = arc.startAngle ?? arc._model?.startAngle;
+        const endAngle = arc.endAngle ?? arc._model?.endAngle;
+        const midAngle = (startAngle + endAngle) / 2;
+
+        const x = arc.x + Math.cos(midAngle) * labelR;
+        const y = arc.y + Math.sin(midAngle) * labelR;
+
+        // draw chip background
+        const txt = numberFormat(value);
+        ctx.save();
+        ctx.font = '600 14px Inter, system-ui, Arial';
+        const paddingX = 10;
+        const paddingY = 6;
+        const textWidth = ctx.measureText(txt).width;
+        const boxW = textWidth + paddingX * 2;
+        const boxH = 20;
+
+        // rounded rect
+        ctx.beginPath();
+        const rx = 6;
+        ctx.fillStyle = '#ffffff';
+        const bx = x - boxW/2;
+        const by = y - boxH/2;
+        ctx.moveTo(bx + rx, by);
+        ctx.arcTo(bx + boxW, by, bx + boxW, by + boxH, rx);
+        ctx.arcTo(bx + boxW, by + boxH, bx, by + boxH, rx);
+        ctx.arcTo(bx, by + boxH, bx, by, rx);
+        ctx.arcTo(bx, by, bx + boxW, by, rx);
+        ctx.closePath();
+        ctx.fill();
+
+        // text
+        ctx.fillStyle = '#0b1220';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(txt, x, y);
+
+        ctx.restore();
+      });
+    }
+  };
+
+  // render doughnut
+  function renderDoughnut(canvas, dataObj) {
     try {
-      const prev = Chart.getChart(canvas);
-      if (prev) prev.destroy();
+      const existing = Chart.getChart(canvas);
+      if (existing) existing.destroy();
     } catch(e){}
 
-    const ctx = canvas.getContext('2d');
-    // Data shaping: adapta a la estructura de tu API
-    const total_sales = (data.total_sales !== undefined) ? data.total_sales : (data.totalSales || 0);
-    const total_reserved = (data.total_reserved !== undefined) ? data.total_reserved : (data.totalReserved || 0);
-    const pending = (data.pending !== undefined) ? data.pending : (data.pending || 0);
+    const total_sales = (dataObj && (dataObj.total_sales !== undefined)) ? dataObj.total_sales : (dataObj && (dataObj.totalSales || 0)) || 0;
+    const total_reserved = (dataObj && (dataObj.total_reserved !== undefined)) ? dataObj.total_reserved : (dataObj && (dataObj.totalReserved || Math.round(total_sales * 0.4))) || 0;
+    const rest = Math.max(0, total_sales ? (total_sales - total_reserved) : 60);
 
-    const labels = ['Ventas', 'Reservado', 'Pendiente'];
-    const values = [total_sales, total_reserved, pending];
+    const labels = [`Donations (${total_sales? Math.round((total_reserved/total_sales)*100) : 40}%)`, `Production (${total_sales? Math.round((rest/total_sales)*100) : 60}%)`];
+    const values = [total_reserved || 40, rest || 60];
 
-    const chart = new Chart(ctx, {
-      type: 'bar',
+    const cfg = {
+      type: 'doughnut',
       data: {
         labels: labels,
         datasets: [{
-          label: 'Valores (R$ o unidades)',
           data: values,
-          backgroundColor: [PAW_COLORS.primary, PAW_COLORS.accent, PAW_COLORS.muted],
-          borderColor: ['rgba(0,0,0,0.06)'],
-          borderWidth: 1,
+          backgroundColor: [COLORS.pink, COLORS.blue],
+          hoverOffset: 6,
+          borderWidth: 2,
+          borderColor: 'rgba(0,0,0,0.06)'
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        cutout: '40%',
         plugins: {
-          legend: { display: false },
+          legend: { position: 'bottom', labels: { color: '#e6eef7' } },
           tooltip: {
+            bodyColor: '#0b1220',
+            backgroundColor: '#fff',
+            titleColor: '#0b1220',
             callbacks: {
               label: function(context) {
-                const v = context.parsed.y;
-                return `${context.dataset.label ? context.dataset.label + ': ' : ''}${numberFormat(v)}`;
+                const v = context.parsed;
+                return `${context.label}: ${numberFormat(v)}`;
               }
             }
           }
         },
-        scales: {
-          x: { grid: { display: false } },
-          y: {
-            ticks: {
-              callback: function(val) { return numberFormat(val); }
-            },
-            beginAtZero: true
-          }
-        },
         animation: { duration: 600, easing: 'easeOutQuart' }
-      }
-    });
+      },
+      plugins: [innerLabelPlugin]
+    };
 
-    console.log('revenue-init-prod: chart rendered', values);
-    return chart;
+    // register plugin locally (Chart.register not needed if plugin passed in config)
+    try {
+      new Chart(canvas.getContext('2d'), cfg);
+      console.log('revenue-init-prod: doughnut rendered', values);
+    } catch(e){
+      console.error('revenue-init-prod: error rendering doughnut', e);
+    }
   }
 
+  // run
   document.addEventListener('DOMContentLoaded', function(){
-    // si quieres apuntar a un id concreto: pon 'revenueChart' como id del canvas
-    const\ canvasId\ =\ \(document\.querySelector\('\#revenuePie'\)\ \?\ 'revenuePie'\ :\ \(document\.querySelector\('\#revenueChart'\)\ \?\ 'revenueChart'\ :\ null\)\);
-
+    const canvasId = (document.querySelector('#revenuePie') ? 'revenuePie' : (document.querySelector('#revenueChart') ? 'revenueChart' : null));
     waitForChartAndCanvas(canvasId, function(canvas){
       fetch('/api/admin-stats').then(r => {
         if (!r.ok) throw new Error('fetch admin-stats -> ' + r.status);
         return r.json();
       }).then(json => {
-        renderChart(canvas, json);
+        renderDoughnut(canvas, json);
       }).catch(err => {
         console.warn('revenue-init-prod: fetch failed, rendering fallback', err);
-        renderChart(canvas, { total_sales: 0, total_reserved: 0, pending: 0 });
+        renderDoughnut(canvas, { total_sales: 0, total_reserved: 40, pending: 0 });
       });
     });
   });
 })();
-
