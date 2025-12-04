@@ -40,6 +40,10 @@
       --muted:#9aa4b2; 
       --accent:#ffb86b; 
       --white:#eef2f7;
+      --flow-text:#eef2f7;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+
+      /* SVG / charts / tooltips */
       --svg-node-bg:#aee1ef;
       --svg-node-text:#0b1220;
       --svg-node-charity:#ffb3b3;
@@ -49,15 +53,16 @@
       --chart-production:#7fb3ff;
       --tooltip-bg:#07111a;
       --tooltip-border:rgba(255,255,255,0.03);
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
     }
 
+    /* Light theme */
     [data-theme="light"] {
       --bg:#f8fafc;
       --card:#ffffff;
       --muted:#64748b;
       --accent:#f97316;
       --white:#0f172a;
+      --flow-text:#0f172a;
       --svg-node-bg:#0ea5e9;
       --svg-node-text:#ffffff;
       --svg-node-charity:#ef4444;
@@ -73,7 +78,7 @@
     body{margin:0;background:var(--bg);color:var(--white);line-height:1.45;-webkit-font-smoothing:antialiased}
     .wrap{max-width:1100px;margin:32px auto;padding:24px}
     
-    /* Header mejorado con mejor layout */
+    /* Header mejorado con grid layout */
     header{
       display:grid;
       grid-template-columns:1fr auto;
@@ -135,7 +140,7 @@
     .kpiRow{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
     .kpiBox{background:rgba(128,128,128,0.08);padding:10px;border-radius:8px;min-width:140px;transition:background 0.3s ease}
     .kpiBox .label{color:var(--muted);font-size:13px}
-    .kpiBox .value{font-weight:700;font-size:18px;margin-top:6px;color:var(--white)}
+    .kpiBox .value{font-weight:700;font-size:18px;margin-top:6px;color:var(--flow-text)}
     .section-title {margin-top:12px;margin-bottom:6px;font-size:18px}
     .small {font-size:14px;color:var(--muted)}
     .impact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:12px}
@@ -151,7 +156,7 @@
     .proof-card{display:flex;gap:8px;align-items:center}
     .muted-plain{color:var(--muted);font-size:13px}
 
-    /* Theme Toggle - Reposicionado y mejorado */
+    /* Theme Toggle */
     .theme-toggle{
       background:var(--card);
       border:1px solid var(--tooltip-border);
@@ -166,20 +171,9 @@
       transition:all 0.2s ease;
       white-space:nowrap;
     }
-    .theme-toggle:hover{
-      background:rgba(128,128,128,0.1);
-      transform:translateY(-1px);
-    }
-    .theme-toggle:focus{
-      outline:2px solid var(--accent);
-      outline-offset:2px;
-    }
-    .theme-icon{
-      width:18px;
-      height:18px;
-      fill:currentColor;
-      flex-shrink:0;
-    }
+    .theme-toggle:hover{background:rgba(128,128,128,0.1);transform:translateY(-1px)}
+    .theme-toggle:focus{outline:2px solid var(--accent);outline-offset:2px}
+    .theme-icon{width:18px;height:18px;fill:currentColor}
 
     /* Last Updated Box */
     .last-updated-box{
@@ -192,28 +186,21 @@
     .last-updated-value{
       font-weight:700;
       margin-top:4px;
-      color:var(--white);
+      color:var(--flow-text);
     }
 
-    /* SVG mejoras - texto más grande y adaptativo */
+    /* SVG texto con variable explícita */
     #flow-svg text{
       font-size:14px;
       font-weight:700;
       pointer-events:none;
       text-anchor:middle;
-      /* Usamos fill con variable CSS para adaptar al tema */
-      fill:var(--white);
-      text-shadow:
-        0 1px 3px rgba(0,0,0,0.5),
-        0 0 8px rgba(0,0,0,0.3);
+      fill:var(--flow-text);
+      text-shadow:0 1px 3px rgba(0,0,0,0.45);
     }
     
-    /* En modo claro, invertimos el texto para mejor contraste */
     [data-theme="light"] #flow-svg text{
-      fill:var(--white);
-      text-shadow:
-        0 1px 2px rgba(0,0,0,0.3),
-        0 0 6px rgba(0,0,0,0.2);
+      text-shadow:0 1px 2px rgba(0,0,0,0.12);
     }
     
     #flow-svg .node circle{
@@ -318,7 +305,7 @@
         <p class="muted" style="margin-top:6px">Hover / tap the nodes to see details. Click proofs to inspect receipts.</p>
         <div style="width:100%;height:320px;margin-top:12px">
           <svg id="flow-svg" viewBox="0 0 1000 300" role="img" aria-label="Interactive revenue flow diagram" style="width:100%;height:100%">
-            <!-- Nodos con texto mejorado y multi-línea -->
+            <!-- Nodos con texto multi-línea, sin atributos inline -->
             <g class="node" data-title="Digital product sales" data-desc="Sales of products on Whop (artbooks, AI packs, music)">
               <circle cx="170" cy="200" r="42" fill="var(--svg-node-bg)"></circle>
               <text x="170" y="195">Digital</text>
@@ -461,7 +448,7 @@
   <div id="svgTooltip" class="svg-tooltip" role="tooltip" aria-hidden="true"></div>
 
   <script>
-  // Theme toggle FIRST - para aplicar tema antes de cargar chart
+  // Theme toggle con applyTheme robusto
   (function(){
     if (window._themeToggleInitialized) return;
     window._themeToggleInitialized = true;
@@ -491,21 +478,27 @@
         btn.setAttribute('aria-pressed', 'false');
       }
 
-      // Update chart if exists
+      // Actualizar chart con colores desde CSS
       if (window.revenueChartInstance && window.revenueChartInstance.data) {
-        const isDark = theme === 'dark';
-        const colors = isDark ? ['#ff8b8b', '#7fb3ff'] : ['#ef4444', '#3b82f6'];
-        const textColor = isDark ? '#e6eef7' : '#0f172a';
+        const cs = getComputedStyle(document.documentElement);
+        const chartDonation = cs.getPropertyValue('--chart-donation').trim() || (theme==='dark' ? '#ff8b8b' : '#ef4444');
+        const chartProduction = cs.getPropertyValue('--chart-production').trim() || (theme==='dark' ? '#7fb3ff' : '#3b82f6');
+        const colors = [chartDonation, chartProduction];
         
         window.revenueChartInstance.data.datasets[0].backgroundColor = colors;
-        if (window.revenueChartInstance.options.plugins.legend) {
-          window.revenueChartInstance.options.plugins.legend.labels.color = textColor;
+
+        // Protecciones antes de acceder a opciones profundas
+        const legend = window.revenueChartInstance.options?.plugins?.legend;
+        if (legend) {
+          legend.labels = legend.labels || {};
+          legend.labels.color = (theme==='dark' ? (cs.getPropertyValue('--white').trim()||'#e6eef7') : (cs.getPropertyValue('--white').trim()||'#0f172a'));
         }
-        if (window.revenueChartInstance.options.plugins.tooltip) {
-          window.revenueChartInstance.options.plugins.tooltip.bodyColor = textColor;
-          window.revenueChartInstance.options.plugins.tooltip.titleColor = textColor;
+        const tooltip = window.revenueChartInstance.options?.plugins?.tooltip;
+        if (tooltip) {
+          tooltip.bodyColor = (theme==='dark' ? (cs.getPropertyValue('--white').trim()||'#e6eef7') : (cs.getPropertyValue('--white').trim()||'#0f172a'));
+          tooltip.titleColor = tooltip.bodyColor;
         }
-        
+
         try { window.revenueChartInstance.update(); } catch(e) { console.warn('chart update', e); }
       }
     }
@@ -542,7 +535,6 @@
       const clientY = evt.clientY || (evt.touches && evt.touches[0] && evt.touches[0].clientY) || 0;
       tooltip.style.left = (clientX + 12) + 'px';
       tooltip.style.top = (clientY + 12) + 'px';
-      tooltip.innerHTML = '<strong style="color:var(--white)">' + title + '</strong><div style="margin-top:6px;font-size:13px">' + desc + '</div>';
-      tooltip.style.display = 'block';
-      tooltip.style.opacity = '1';
-      tooltip.
+      tooltip.innerHTML = '<strong style="color:var(--flow-text)">' + title + '</strong>
+<div style="margin-top:6px;font-size:13px">' + desc + '</div>';
+      tooltip.style.display = '
