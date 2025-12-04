@@ -81,6 +81,7 @@
     .proof-card{display:flex;gap:8px;align-items:center}
     .muted-plain{color:var(--muted);font-size:13px}
   /* BEGIN: pawthways theme toggle CSS */
+/* Theme variables for SVG labels only (DO NOT override page background/color) */
 :root {
   --flow-text-light: #0b1220;
   --flow-stroke-light: rgba(255,255,255,0.92);
@@ -88,26 +89,17 @@
   --flow-stroke-dark: rgba(0,0,0,0.88);
 }
 
-/* default: dark mode variables (page was dark by default) */
+/* Only set variables — do NOT set body background or global color */
 body.dark {
   --flow-text: var(--flow-text-dark);
   --flow-stroke: var(--flow-stroke-dark);
 }
-
-/* light theme overrides */
 body.light {
-  --bg: #ffffff;
-  --card: #fafbfc;
-  --muted: #4b5563;
-  --accent: #ffb86b; /* keep accent */
-  --white: #0b1220;
   --flow-text: var(--flow-text-light);
   --flow-stroke: var(--flow-stroke-light);
-  background: var(--bg);
-  color: var(--white);
 }
 
-/* SVG label rules that follow the current theme variables */
+/* SVG label rules that follow the current theme variables (only styling SVG text) */
 #flow-svg text {
   fill: var(--flow-text) !important;
   font-weight: 700 !important;
@@ -476,6 +468,7 @@ a.appendChild(img);
   <script src="/assets/js/theme-toggle.js"></script>
 </body>
 </html>
+
 
 
 
