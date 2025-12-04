@@ -88,7 +88,7 @@
 
   document.addEventListener('DOMContentLoaded', function(){
     // si quieres apuntar a un id concreto: pon 'revenueChart' como id del canvas
-    const canvasId = (document.querySelector('#revenueChart') ? 'revenueChart' : null);
+    const\ canvasId\ =\ \(document\.querySelector\('\#revenuePie'\)\ \?\ 'revenuePie'\ :\ \(document\.querySelector\('\#revenueChart'\)\ \?\ 'revenueChart'\ :\ null\)\);
 
     waitForChartAndCanvas(canvasId, function(canvas){
       fetch('/api/admin-stats').then(r => {
@@ -103,3 +103,4 @@
     });
   });
 })();
+
