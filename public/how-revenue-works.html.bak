@@ -41,7 +41,7 @@
 </script>
   <style>
     :root{
-      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#ffb86b; --white:#eef2f7;
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa4b2; --accent:#ffb86b; --white:#eef2f7;   --flow-text: var(--white); /* color por defecto para texto del flow (dark mode: blanco) */
       font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 
       /* SVG / charts / tooltips */
@@ -63,6 +63,7 @@
       --muted:#64748b;
       --accent:#f97316;
       --white:#0f172a;
+      --flow-text: #0b1220; /* texto oscuro en modo claro */
       --svg-node-bg:#0ea5e9;
       --svg-node-text:#ffffff;
       --svg-node-charity:#ef4444;
@@ -94,7 +95,8 @@
     table{width:100%;border-collapse:collapse;margin-top:10px}
     th,td{padding:8px;border-bottom:1px solid var(--tooltip-border);text-align:left;color:var(--muted)}
     th{color:var(--white);font-weight:600}
-    .svg-tooltip{position:fixed;pointer-events:none;padding:8px 10px;border-radius:8px;background:var(--tooltip-bg);color:var(--muted);font-size:13px;border:1px solid var(--tooltip-border);z-index:60;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:opacity 0.2s ease}
+    .svg-tooltip{position:fixed;pointer-events:none;padding:8px 10px;border-radius:8px;background:var(--tooltip-bg);color: var(--flow-text);
+;font-size:13px;border:1px solid var(--tooltip-border);z-index:60;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:opacity 0.2s ease}
     .muted{color:var(--muted)}
     .kpiRow{display:flex;gap:12px;margin-top:8px;flex-wrap:wrap}
     .kpiBox{background:rgba(128,128,128,0.08);padding:10px;border-radius:8px;min-width:140px;transition:background 0.3s ease}
@@ -138,7 +140,15 @@
     .theme-icon{width:18px;height:18px;fill:currentColor}
 
     /* SVG improvements */
-    #flow-svg text{font-size:12px;pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,0.3)}
+    #flow-svg text{
+  font-size:15px;           /* más grande */
+  font-weight:700;
+  pointer-events:none;
+  text-anchor:middle;
+  fill:var(--flow-text);    /* usa la variable para alternar color */
+  dominant-baseline:middle;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
     #flow-svg .node circle{transition:all 0.3s ease}
     #flow-svg .node:hover circle{filter:brightness(1.1);stroke:var(--accent);stroke-width:2}
 
@@ -147,6 +157,9 @@
       .theme-toggle{font-size:0;padding:8px}
       .theme-toggle .theme-icon{margin:0}
     }
+    #last-updated-large, #last-updated {
+  color: var(--flow-text);
+}
   </style>
   <script type="application/ld+json">
   {
