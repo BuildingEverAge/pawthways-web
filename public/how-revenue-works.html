@@ -80,7 +80,50 @@
     .faq{margin-top:12px}
     .proof-card{display:flex;gap:8px;align-items:center}
     .muted-plain{color:var(--muted);font-size:13px}
-  </style>
+  /* BEGIN: pawthways theme toggle CSS */
+:root {
+  --flow-text-light: #0b1220;
+  --flow-stroke-light: rgba(255,255,255,0.92);
+  --flow-text-dark: #ffffff;
+  --flow-stroke-dark: rgba(0,0,0,0.88);
+}
+
+/* default: dark mode variables (page was dark by default) */
+body.dark {
+  --flow-text: var(--flow-text-dark);
+  --flow-stroke: var(--flow-stroke-dark);
+}
+
+/* light theme overrides */
+body.light {
+  --bg: #ffffff;
+  --card: #fafbfc;
+  --muted: #4b5563;
+  --accent: #ffb86b; /* keep accent */
+  --white: #0b1220;
+  --flow-text: var(--flow-text-light);
+  --flow-stroke: var(--flow-stroke-light);
+  background: var(--bg);
+  color: var(--white);
+}
+
+/* SVG label rules that follow the current theme variables */
+#flow-svg text {
+  fill: var(--flow-text) !important;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  paint-order: stroke !important;
+  stroke: var(--flow-stroke) !important;
+  stroke-width: 2.5px !important;
+}
+
+/* subtle circle stroke for separation */
+#flow-svg circle {
+  stroke: rgba(0,0,0,0.06);
+  stroke-width: 1px;
+}
+/* END: pawthways theme toggle CSS */
+
   <script type="application/ld+json">
   {
     "@context":"https://schema.org",
@@ -108,6 +151,7 @@
         <div style="font-size:13px;color:var(--muted)">Last updated</div>
         <div id="last-updated-large" style="font-weight:700;margin-top:6px">—</div>
         <div class="share-buttons" style="margin-top:12px">
+            <button id="theme-toggle-btn" aria-pressed="false" title="Toggle theme" style="background:transparent;border:1px solid rgba(255,255,255,0.06);padding:6px 8px;border-radius:8px;color:var(--muted);cursor:pointer;font-weight:700;margin-left:6px">🌙 / ☀️</button>
           <!-- Simple share links -->
           <a id="share-twitter" title="Share on Twitter" style="color:var(--muted);text-decoration:none">Share</a>
         </div>
@@ -427,8 +471,14 @@ a.appendChild(img);
 
   <!-- Fix SVG flow labels: improve contrast and size -->
   <script src="/assets/js/flow-label-fix.js"></script>
+
+  <!-- Theme toggle behavior -->
+  <script src="/assets/js/theme-toggle.js"></script>
 </body>
 </html>
+
+
+
 
 
 
