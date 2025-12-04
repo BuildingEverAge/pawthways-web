@@ -47,7 +47,6 @@
       --accent:#ffb86b;
       --white:#eef2f7;
       --flow-text: var(--white);      /* texto del flow: blanco en dark */
-      --flow-node-fill: var(--svg-node-bg); /* fill por defecto de las bolas */
       font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
 
       /* SVG / charts / tooltips */
@@ -69,8 +68,7 @@
       --muted:#64748b;
       --accent:#f97316;
       --white:#0f172a;
-      --flow-text: #0b1220;            /* texto oscuro en modo claro */
-      --flow-node-fill: #0b1220;       /* bolas negras en modo claro */
+      --flow-text: #0b1220;            /* texto oscuro en modo claro */       /* bolas negras en modo claro */
       --svg-node-bg:#0ea5e9;
       --svg-node-text:#ffffff;
       --svg-node-charity:#ef4444;
@@ -85,7 +83,60 @@
     html,body{height:100%;transition:background-color 0.3s ease, color 0.3s ease}
     body{margin:0;background:var(--bg);color:var(--white);line-height:1.45;-webkit-font-smoothing:antialiased}
     .wrap{max-width:1100px;margin:32px auto;padding:24px}
-    header{display:flex;gap:20px;align-items:center;flex-wrap:wrap;position:relative}
+   /* Header con grid layout */
+header{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:20px;
+  align-items:start;
+  margin-bottom:12px;
+}
+
+.header-main{
+  grid-column:1;
+  min-width:0;
+}
+
+.header-actions{
+  grid-column:2;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  align-items:flex-end;
+}
+
+@media (max-width:768px){
+  header{
+    grid-template-columns:1fr;
+  }
+  .header-actions{
+    grid-column:1;
+    flex-direction:row;
+    justify-content:space-between;
+    align-items:center;
+    width:100%;
+  }
+  .last-updated-box{
+    order:1;
+  }
+  .theme-toggle{
+    order:2;
+  }
+}
+
+/* Last Updated Box (FUERA del media query) */
+.last-updated-box{
+  text-align:right;
+}
+.last-updated-label{
+  font-size:13px;
+  color:var(--muted);
+}
+.last-updated-value{
+  font-weight:700;
+  margin-top:4px;
+  color:var(--flow-text);
+}
     h1{margin:.2em 0 0;font-size:26px}
     p.lead{color:var(--muted);margin-top:6px}
     .card{background:linear-gradient(180deg, rgba(128,128,128,0.05), rgba(128,128,128,0.02));padding:18px;border-radius:12px;box-shadow:0 4px 16px rgba(0,0,0,0.15);margin:16px 0;transition:box-shadow 0.3s ease}
@@ -126,10 +177,7 @@
 
     /* Theme Toggle Button */
     .theme-toggle{
-      position:absolute;
-      top:8px;
-      right:8px;
-      background:var(--card);
+  background:var(--card);
       border:1px solid var(--tooltip-border);
       border-radius:8px;
       padding:8px 12px;
@@ -157,11 +205,9 @@
       text-shadow: 0 1px 2px rgba(0,0,0,0.35);
     }
     
-    /* bolas: usa la variable flow-node-fill (se cambia en :root / theme) */
     #flow-svg .node circle{
-      transition:all 0.3s ease;
-      fill: var(--flow-node-fill) !important;
-    }
+  transition:all 0.3s ease;
+}
     
     #flow-svg .node:hover circle{filter:brightness(1.1);stroke:var(--accent);stroke-width:2}
 
@@ -170,9 +216,6 @@
       .theme-toggle{font-size:0;padding:8px}
       .theme-toggle .theme-icon{margin:0}
     }
-    #last-updated-large, #last-updated {
-  color: var(--flow-text);
-}
   </style>
   <script type="application/ld+json">
   {
@@ -188,33 +231,34 @@
 <body>
   <main class="wrap" role="main">
     <header>
-      <div style="flex:1">
-        <h1>How it works — Revenue Model (Pawthways)</h1>
-        <p class="lead">Full transparency: how Pawthways generates revenue and how 40% is allocated to verified rescues. Real numbers, proof documents and up-to-date KPIs.</p>
-        <div style="margin-top:10px" class="top-row">
-          <div class="badge">40% → Donated</div>
-          <div style="margin-left:12px" class="muted-plain">Fixed, audited distribution • <a href="/transparency.html" style="color:var(--accent);text-decoration:none">View dashboard</a></div>
-        </div>
-      </div>
+  <div class="header-main">
+    <h1>How it works — Revenue Model (Pawthways)</h1>
+    <p class="lead">Full transparency: how Pawthways generates revenue and how 40% is allocated to verified rescues. Real numbers, proof documents and up-to-date KPIs.</p>
+    <div style="margin-top:10px" class="top-row">
+      <div class="badge">40% → Donated</div>
+      <div style="margin-left:12px" class="muted-plain">Fixed, audited distribution • <a href="/transparency.html" style="color:var(--accent);text-decoration:none">View dashboard</a></div>
+    </div>
+  </div>
 
-      <div style="text-align:right">
-        <div style="font-size:13px;color:var(--muted)">Last updated</div>
-        <div id="last-updated-large" style="font-weight:700;margin-top:6px">—</div>
-        <div class="share-buttons" style="margin-top:12px">
-          <!-- Simple share links -->
-          <a id="share-twitter" title="Share on Twitter" style="color:var(--muted);text-decoration:none">Share</a>
-        </div>
-      </div>
-
-      <!-- Theme toggle button (inserted into header) -->
-      <button id="themeToggle" class="theme-toggle" aria-label="Toggle light/dark theme" aria-pressed="false" type="button">
-        <svg class="theme-icon" aria-hidden="true" viewBox="0 0 24 24">
-          <path id="sunIcon" d="M12 18a6 6 0 100-12 6 6 0 000 12zM12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
-          <path id="moonIcon" style="display:none" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-        </svg>
-        <span class="theme-label">Theme</span>
-      </button>
-    </header>
+  <div class="header-actions">
+    <button id="themeToggle" class="theme-toggle" aria-label="Toggle light/dark theme" aria-pressed="false" type="button">
+      <svg class="theme-icon" aria-hidden="true" viewBox="0 0 24 24">
+        <path id="sunIcon" d="M12 18a6 6 0 100-12 6 6 0 000 12zM12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
+        <path id="moonIcon" style="display:none" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+      </svg>
+      <span class="theme-label">Theme</span>
+    </button>
+    
+    <div class="last-updated-box">
+      <div class="last-updated-label">Last updated</div>
+      <div class="last-updated-value" id="last-updated-large">—</div>
+    </div>
+    
+    <div class="share-buttons">
+      <a id="share-twitter" title="Share on Twitter" style="color:var(--muted);text-decoration:none;font-size:14px">Share</a>
+    </div>
+  </div>
+</header>
 
     <!-- INTRO -->
     <section id="introduction" class="card full" aria-labelledby="intro-title">
