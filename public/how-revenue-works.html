@@ -473,11 +473,23 @@ header{
   (function(){
     const canvasEl = document.getElementById('revenuePie');
     const ctx = canvasEl && canvasEl.getContext ? canvasEl.getContext('2d') : null;
-    const defaultData = {
-      labels: ['Donations (40%)', 'Production & Growth (60%)'],
-      datasets: [{ data: [40,60], backgroundColor: [getComputedStyle(document.documentElement).getPropertyValue('--chart-donation').trim() || '#ff8b8b', getComputedStyle(document.documentElement).getPropertyValue('--chart-production').trim() || '#7fb3ff'], hoverOffset:8 }]
-    };
-    const config = { 
+    // Detectar tema ANTES de inicializar el chart
+const savedTheme = localStorage.getItem('pawthways-theme') || 'dark';
+const isDarkMode = savedTheme === 'dark';
+const initialTextColor = isDarkMode ? '#eef2f7' : '#0b1220';
+const initialChartDonation = isDarkMode ? '#ff8b8b' : '#ef4444';
+const initialChartProduction = isDarkMode ? '#7fb3ff' : '#3b82f6';
+const initialTooltipBg = isDarkMode ? '#07111a' : '#ffffff';
+
+const defaultData = {
+  labels: ['Donations (40%)', 'Production & Growth (60%)'],
+  datasets: [{ 
+    data: [40,60], 
+    backgroundColor: [initialChartDonation, initialChartProduction], 
+    hoverOffset:8 
+  }]
+};
+const config = { 
   type:'pie', 
   data: defaultData, 
   options: { 
@@ -486,7 +498,7 @@ header{
       legend:{ 
         position:'bottom', 
         labels:{ 
-          color:getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || '#e6eef7',
+          color: initialTextColor,
           font: {
             size: 13,
             weight: '600'
@@ -495,9 +507,9 @@ header{
         } 
       }, 
       tooltip:{ 
-        bodyColor:getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || '#e6eef7', 
-        titleColor:getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || '#fff',
-        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--tooltip-bg').trim() || 'rgba(0,0,0,0.8)'
+        bodyColor: initialTextColor, 
+        titleColor: initialTextColor,
+        backgroundColor: initialTooltipBg
       } 
     } 
   } 
