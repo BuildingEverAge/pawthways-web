@@ -216,6 +216,26 @@ header{
       .theme-toggle{font-size:0;padding:8px}
       .theme-toggle .theme-icon{margin:0}
     }
+    /* PARCHÉ: forzar fill de los círculos y evitar bolas negras en modo claro */
+#flow-svg .node circle {
+  transition: all 0.3s ease;
+  /* preferimos variables de tema; !important para dominar inline/fill heredado */
+  fill: var(--svg-node-bg) !important;
+  stroke: transparent !important;
+}
+
+/* asegurar el texto del SVG use la variable correcta */
+#flow-svg text { fill: var(--flow-text) !important; }
+
+/* PARCHÉ: evitar solapamientos del last-updated / theme toggle */
+.header-actions { position: relative; z-index: 2; }
+.last-updated-box { position: relative; z-index: 3; text-align: right; }
+
+/* asegurar orden en pantallas pequeñas */
+@media (max-width:768px){
+  .last-updated-box { order: 1; z-index: 3; }
+  .theme-toggle { order: 2; z-index: 2; }
+}
   </style>
   <script type="application/ld+json">
   {
@@ -674,6 +694,31 @@ if (tooltip) {
       applyTheme(next);
     });
   })();
+  // proof-thumb validator: revisa Content-Type y sustituye thumbs inválidos
+(async function validateProofThumbs(){
+  const thumbs = Array.from(document.querySelectorAll('.proofs a img.proof-thumb'));
+  if (!thumbs.length) return;
+  const placeholder = '/assets/img/proof-placeholder.svg';
+  for (const img of thumbs) {
+    const src = img.src;
+    try {
+      // HEAD fetch para verificar tipo (CORS debe permitirlo)
+      const res = await fetch(src, { method: 'HEAD', cache: 'no-store' });
+      const ct = res.headers.get('Content-Type') || '';
+      if (!ct.startsWith('image/')) {
+        console.warn('proof-thumb: no es imagen -> fallback', src, ct);
+        img.src = placeholder;
+        img.dataset.fallback = '1';
+      } else {
+        // opcional: forzar extensión visible correcta si quieres
+        img.dataset.contentType = ct;
+      }
+    } catch(e) {
+      // si HEAD falla por CORS, intenta cargar y validar por magic bytes
+      console.warn('proof-thumb: HEAD failed, keep original (CORS?)', src, e);
+    }
+  }
+})();
   </script>
 </body>
 </html>
