@@ -477,7 +477,31 @@ header{
       labels: ['Donations (40%)', 'Production & Growth (60%)'],
       datasets: [{ data: [40,60], backgroundColor: [getComputedStyle(document.documentElement).getPropertyValue('--chart-donation').trim() || '#ff8b8b', getComputedStyle(document.documentElement).getPropertyValue('--chart-production').trim() || '#7fb3ff'], hoverOffset:8 }]
     };
-    const config = { type:'pie', data: defaultData, options: { responsive:true, plugins:{ legend:{ position:'bottom', labels:{ color:getComputedStyle(document.documentElement).getPropertyValue('--white').trim() || '#e6eef7'} }, tooltip:{ bodyColor:getComputedStyle(document.documentElement).getPropertyValue('--white').trim() || '#e6eef7', titleColor:getComputedStyle(document.documentElement).getPropertyValue('--white').trim() || '#fff' } } } };
+    const config = { 
+  type:'pie', 
+  data: defaultData, 
+  options: { 
+    responsive:true, 
+    plugins:{ 
+      legend:{ 
+        position:'bottom', 
+        labels:{ 
+          color:getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || '#e6eef7',
+          font: {
+            size: 13,
+            weight: '600'
+          },
+          padding: 10
+        } 
+      }, 
+      tooltip:{ 
+        bodyColor:getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || '#e6eef7', 
+        titleColor:getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || '#fff',
+        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--tooltip-bg').trim() || 'rgba(0,0,0,0.8)'
+      } 
+    } 
+  } 
+};
     let chart = null;
     function initChartIfAvailable(){ 
       if (!ctx) return; 
@@ -616,8 +640,15 @@ header{
         const colors = isDark ? [getComputedStyle(document.documentElement).getPropertyValue('--chart-donation').trim()||'#ff8b8b', getComputedStyle(document.documentElement).getPropertyValue('--chart-production').trim()||'#7fb3ff'] : [getComputedStyle(document.documentElement).getPropertyValue('--chart-donation').trim()||'#ef4444', getComputedStyle(document.documentElement).getPropertyValue('--chart-production').trim()||'#3b82f6'];
         window.revenueChartInstance.data.datasets[0].backgroundColor = colors;
         if (window.revenueChartInstance.options && window.revenueChartInstance.options.plugins && window.revenueChartInstance.options.plugins.legend) {
-          window.revenueChartInstance.options.plugins.legend.labels.color = isDark ? getComputedStyle(document.documentElement).getPropertyValue('--white').trim()||'#e6eef7' : getComputedStyle(document.documentElement).getPropertyValue('--white').trim()||'#0f172a';
-        }
+  const textColor = getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || (isDark ? '#e6eef7' : '#0f172a');
+  window.revenueChartInstance.options.plugins.legend.labels.color = textColor;
+}
+const tooltip = window.revenueChartInstance.options?.plugins?.tooltip;
+if (tooltip) {
+  const textColor = getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || (isDark ? '#e6eef7' : '#0f172a');
+  tooltip.bodyColor = textColor;
+  tooltip.titleColor = textColor;
+}
         try{ window.revenueChartInstance.update(); }catch(e){/* swallow */ }
       }
     }
