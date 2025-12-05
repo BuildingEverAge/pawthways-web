@@ -8601,3 +8601,57 @@ input, select, textarea {
 			#wrapper.divided > .invert:first-child {
 				box-shadow: none !important;
 			}
+
+			/* CÍRCULOS MÁS GRANDES EN MÓVIL */
+@media (max-width: 768px) {
+    .flow-circle {
+        width: 200px !important;
+        height: 200px !important;
+        font-size: 18px !important;
+        padding: 30px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .flow-circle {
+        width: 240px !important;
+        height: 240px !important;
+        font-size: 20px !important;
+        padding: 35px !important;
+        line-height: 1.4 !important;
+    }
+}
+
+/* FLECHAS MÁS GRANDES */
+@media (max-width: 768px) {
+    .flow-arrow {
+        height: 60px !important;
+        width: 5px !important;
+    }
+    
+    .flow-arrow::after {
+        font-size: 24px !important;
+    }
+}
+
+/* CONTENEDOR DEL DIAGRAMA */
+@media (max-width: 768px) {
+    .flow-diagram {
+        gap: 40px !important;
+        padding: 30px 0 !important;
+    }
+    
+    .flow-container {
+        padding: 40px 20px !important;
+    }
+}
+
+/* TOOLTIPS/DETALLES MÁS GRANDES */
+@media (max-width: 768px) {
+    .node-details,
+    .tooltip {
+        font-size: 16px !important;
+        padding: 20px !important;
+        min-width: 280px !important;
+    }
+}
