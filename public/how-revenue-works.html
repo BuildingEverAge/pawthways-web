@@ -435,21 +435,21 @@ header{
         <text x="180" y="128">Digital Product Sales</text>
       </g>
 
-      <path d="M180 170 L180 210" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
+      <path d="M180 160 L180 220" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
 
       <g class="node" data-title="Whop (platform)" data-desc="Payment processing">
         <circle cx="180" cy="260" r="46" fill="var(--svg-node-bg)"></circle>
         <text x="180" y="268">Whop</text>
       </g>
 
-      <path d="M180 310 L180 350" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
+      <path d="M180 300 L180 360" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
 
       <g class="node" data-title="Generated revenue" data-desc="Revenue in DB">
         <circle cx="180" cy="400" r="56" fill="var(--svg-node-bg)"></circle>
         <text x="180" y="408">Generated Revenue</text>
       </g>
 
-      <path d="M180 450 L180 490" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
+      <path d="M180 440 L180 500" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
 
       <g class="node" data-title="Charitable Causes (40%)" data-desc="40% to verified NGOs">
         <circle cx="180" cy="560" r="56" fill="var(--svg-node-charity)"></circle>
@@ -631,7 +631,7 @@ const config = {
       legend:{ 
         position:'bottom', 
         labels:{ 
-          color: initialTextColor,
+          color: getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || '#1e293b',
           font: {
             size: 13,
             weight: '600'
