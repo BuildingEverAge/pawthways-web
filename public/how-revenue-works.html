@@ -104,6 +104,11 @@ header{
   gap:12px;
   align-items:flex-end;
 }
+.flow-wrapper{
+  width:100%;
+  height:300px;
+  margin-top:12px;
+}
 
 @media (max-width:768px){
   header{
@@ -212,10 +217,31 @@ header{
     #flow-svg .node:hover circle{filter:brightness(1.1);stroke:var(--accent);stroke-width:2}
 
     @media (max-width:600px){
-      #flow-svg text{font-size:10px}
-      .theme-toggle{font-size:0;padding:8px}
-      .theme-toggle .theme-icon{margin:0}
-    }
+  /* Dar más alto al bloque del diagrama en móvil */
+  .flow-wrapper{
+    height:380px; /* puedes subir a 400 si quieres más aire */
+  }
+
+  /* Hacer más grandes los nodos (círculos + texto) en móvil */
+  #flow-svg .node{
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(1.3); /* prueba 1.2–1.4 según lo veas */
+  }
+
+  /* Texto un poco más grande para que siga siendo legible */
+  #flow-svg text{
+    font-size:12px;
+  }
+
+  .theme-toggle{
+    font-size:0;
+    padding:8px;
+  }
+  .theme-toggle .theme-icon{
+    margin:0;
+  }
+}
     /* PARCHÉ: forzar fill de los círculos y evitar bolas negras en modo claro */
 #flow-svg .node circle {
   transition: all 0.3s ease;
@@ -321,7 +347,7 @@ header{
       <article class="card" aria-labelledby="flow-title">
         <h3 id="flow-title">Revenue generation & distribution flow</h3>
         <p class="muted" style="margin-top:6px">Hover / tap the nodes to see details. Click proofs to inspect receipts.</p>
-        <div style="width:100%;height:300px;margin-top:12px">
+        <div class="flow-wrapper">
           <!-- SVG flow updated to use CSS variables -->
           <svg id="flow-svg" viewBox="0 0 1000 300" role="img" aria-label="Interactive revenue flow diagram" style="width:100%;height:100%">
             <!-- Nodes: identical to original but with variables -->
