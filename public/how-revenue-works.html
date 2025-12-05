@@ -363,63 +363,67 @@ header{
   <!-- DESKTOP: nueva versión mejorada -->
 <div id="flow-desktop" aria-hidden="false" role="img">
   <svg id="flow-svg-desktop" viewBox="0 0 1000 360" preserveAspectRatio="xMidYMid meet" aria-label="Interactive revenue flow diagram (desktop)">
-    <g id="desktop-group">
+  <g id="desktop-group">
 
-      <!-- Production & Growth -->
-      <g class="node" data-title="Production & Growth (60%)" data-desc="60% for team, marketing, content production">
-        <circle cx="160" cy="80" r="60"></circle>
-        <text x="160" y="88">Production & Growth (60%)</text>
-      </g>
-
-      <!-- Digital Product Sales -->
-      <g class="node" data-title="Digital product sales" data-desc="Sales of products on Whop (artbooks, AI packs, music)">
-        <circle cx="150" cy="230" r="50"></circle>
-        <text x="150" y="238">Digital Product Sales</text>
-      </g>
-
-      <!-- Whop -->
-      <g class="node" data-title="Whop (platform)" data-desc="Payment processing platform">
-        <circle cx="380" cy="160" r="55"></circle>
-        <text x="380" y="168">Whop</text>
-      </g>
-
-      <!-- Generated Revenue -->
-      <g class="node" data-title="Generated revenue" data-desc="Revenue registered in the DB">
-        <circle cx="620" cy="160" r="78"></circle>
-        <text x="620" y="168">Generated Revenue</text>
-      </g>
-
-      <!-- Charity -->
-      <g class="node" data-title="Donations (40%)" data-desc="40% redirected to verified NGOs">
-        <circle cx="900" cy="230" r="62"></circle>
-        <text x="900" y="238">Charitable Causes (40%)</text>
-      </g>
-
-      <!-- Arrows -->
-      <defs>
-        <marker id="arrow-desktop" markerWidth="14" markerHeight="14" refX="10" refY="7" orient="auto">
-          <path d="M0,0 L14,7 L0,14 z" fill="var(--svg-arrow)"></path>
-        </marker>
-      </defs>
-
-      <!-- Digital Product Sales -> Whop -->
-      <path d="M190 220 C260 200 330 170 360 165"
-            stroke="var(--svg-arrow)" stroke-width="4" fill="none" marker-end="url(#arrow-desktop)"></path>
-
-      <!-- Whop -> Generated Revenue -->
-      <path d="M435 160 C500 160 560 160 595 160"
-            stroke="var(--svg-arrow)" stroke-width="4" fill="none" marker-end="url(#arrow-desktop)"></path>
-
-      <!-- Generated Revenue -> Charity -->
-      <path d="M700 185 C780 205 850 220 880 225"
-            stroke="var(--svg-arrow)" stroke-width="4" fill="none" marker-end="url(#arrow-desktop)"></path>
-
-      <!-- Generated Revenue -> Production & Growth -->
-      <path d="M580 135 C500 110 320 90 220 90"
-            stroke="var(--svg-arrow)" stroke-width="4" fill="none" marker-end="url(#arrow-desktop)"></path>
-
+    <!-- Circles (nodos) -->
+    <!-- Production & Growth (arriba-izq) -->
+    <g class="node" data-title="Production & Growth (60%)" data-desc="60% for team, marketing, content production">
+      <circle id="c-production" cx="160" cy="80" r="60" fill="var(--svg-node-production)"></circle>
     </g>
-  </svg>
+
+    <!-- Digital Product Sales (izq-abajo) -->
+    <g class="node" data-title="Digital product sales" data-desc="Sales of products on Whop (artbooks, AI packs, music)">
+      <circle id="c-sales" cx="150" cy="230" r="50" fill="var(--svg-node-bg)"></circle>
+    </g>
+
+    <!-- Whop (centro-izq) -->
+    <g class="node" data-title="Whop (platform)" data-desc="Payment processing platform">
+      <circle id="c-whop" cx="380" cy="160" r="55" fill="var(--svg-node-bg)"></circle>
+    </g>
+
+    <!-- Generated Revenue (centro-derecha) -->
+    <g class="node" data-title="Generated revenue" data-desc="Revenue registered in the DB">
+      <circle id="c-rev" cx="620" cy="160" r="78" fill="var(--svg-node-bg)"></circle>
+    </g>
+
+    <!-- Charitable Causes (derecha-abajo) -->
+    <g class="node" data-title="Donations (40%)" data-desc="40% redirected to verified NGOs">
+      <circle id="c-charity" cx="900" cy="230" r="62" fill="var(--svg-node-charity)"></circle>
+    </g>
+
+    <!-- Marker para flechas (más grande y visible) -->
+    <defs>
+      <marker id="arrow-desktop" markerWidth="18" markerHeight="18" refX="12" refY="9" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L18,9 L0,18 z" fill="var(--svg-arrow)"></path>
+      </marker>
+    </defs>
+
+    <!-- RUTAS / FLECHAS (terminan **antes** de llegar al borde del círculo) -->
+    <!-- Digital Product Sales -> Whop (termina antes del centro de Whop) -->
+    <path d="M195 220 C260 200 320 180 345 172"
+          stroke="var(--svg-arrow)" stroke-width="5" stroke-linecap="round" fill="none" marker-end="url(#arrow-desktop)"></path>
+
+    <!-- Whop -> Generated Revenue (termina antes del borde de Generated Revenue) -->
+    <path d="M435 160 C500 160 560 160 570 160"
+          stroke="var(--svg-arrow)" stroke-width="5" stroke-linecap="round" fill="none" marker-end="url(#arrow-desktop)"></path>
+
+    <!-- Generated Revenue -> Charity (termina antes del borde de Charity) -->
+    <path d="M680 185 C740 198 800 210 840 222"
+          stroke="var(--svg-arrow)" stroke-width="5" stroke-linecap="round" fill="none" marker-end="url(#arrow-desktop)"></path>
+
+    <!-- Generated Revenue -> Production & Growth (termina antes del borde de Production) -->
+    <path d="M580 135 C520 118 400 100 260 96"
+          stroke="var(--svg-arrow)" stroke-width="5" stroke-linecap="round" fill="none" marker-end="url(#arrow-desktop)"></path>
+
+    <!-- TEXTOS: colocados DESPUÉS de las flechas para superponerlas si hace falta -->
+    <text x="160" y="88" text-anchor="middle" font-weight="700" font-size="14" fill="var(--flow-text)">Production & Growth (60%)</text>
+    <text x="150" y="238" text-anchor="middle" font-weight="700" font-size="14" fill="var(--flow-text)">Digital Product Sales</text>
+    <text x="380" y="168" text-anchor="middle" font-weight="700" font-size="14" fill="var(--flow-text)">Whop</text>
+    <text x="620" y="168" text-anchor="middle" font-weight="700" font-size="14" fill="var(--flow-text)">Generated Revenue</text>
+    <text x="900" y="238" text-anchor="middle" font-weight="700" font-size="14" fill="var(--flow-text)">Charitable Causes (40%)</text>
+
+  </g>
+</svg>
 </div>
 
   <!-- MOBILE: version simplificada, apilada y grandes nodos -->
