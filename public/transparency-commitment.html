@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pawthways — Transparency Commitment</title>
+  <meta name="description" content="Pawthways transparency commitment: 40% of revenue donated. Live aggregates, proof documents and step-by-step verification instructions." />
+  <link rel="canonical" href="https://pawthways-web.vercel.app/public/transparency-commitment.html" />
+  <!-- JSON-LD: Organization + WebPage -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebPage",
+    "name":"Transparency Commitment — Pawthways",
+    "url":"https://pawthways-web.vercel.app/public/transparency-commitment.html",
+    "description":"How Pawthways allocates 40% of revenue to verified animal rescues, with public aggregates and proof documents.",
+    "inLanguage":"en-US",
+    "mainEntity":{
+      "@type":"Organization",
+      "name":"Pawthways",
+      "url":"https://pawthways-web.vercel.app",
+      "description":"Digital products that fund animal rescues — 40% of revenue donated to verified causes.",
+      "logo":"https://pawthways-web.vercel.app/assets/logo.png"
+    }
+  }
+  </script>
+
+  <!-- Page CSS -->
+  <link rel="stylesheet" href="/public/css/transparency-commitment.css" />
+
+  <!-- NOTE: Header and :root variables are borrowed from the project's how-revenue-works.html for visual consistency. See source: how-revenue-works.html. :contentReference[oaicite:1]{index=1} -->
+</head>
+<body>
+  <!-- HEADER: copy the project's header (dark/light toggle + nav) for consistency.
+       Source: how-revenue-works.html — ensure this header remains in sync with that file. :contentReference[oaicite:2]{index=2} -->
+  <header id="site-header" class="tp-header" role="banner" aria-label="Site header">
+    <!-- Ideally: paste the exact <header> block from how-revenue-works.html here for pixel-consistency -->
+    <!-- If you prefer, keep a single shared header include in your build system. -->
+    <div class="tp-header-inner">
+      <h1 class="tp-site-title">Pawthways — Transparency Commitment</h1>
+      <div class="tp-header-actions">
+        <div class="tp-badge" aria-hidden="true">40% → Donated</div>
+        <button id="tpThemeToggle" class="tp-theme-toggle" aria-label="Toggle light/dark theme" type="button" aria-pressed="false">Theme</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="tp-wrap" role="main">
+    <!-- HERO -->
+    <section id="hero" class="tp-hero" aria-labelledby="hero-title">
+      <div class="tp-hero-inner">
+        <div class="tp-hero-content">
+          <h2 id="hero-title">Our Transparency Commitment</h2>
+          <p class="tp-lead">40% of Pawthways revenue is reserved to fund verified animal rescues. We publish aggregates and proof documents so anyone can verify the flow.</p>
+          <p class="tp-meta">If you need a report, email: <a href="mailto:contact.pawthways@gmail.com">contact.pawthways@gmail.com</a></p>
+          <div class="tp-hero-cta">
+            <a class="tp-cta" href="/transparency.html" aria-label="Open transparency dashboard">Open Dashboard</a>
+            <a class="tp-secondary" href="mailto:contact.pawthways@gmail.com?subject=Transparency%20report%20request" aria-label="Request a report by email">Request a report</a>
+          </div>
+        </div>
+        <figure class="tp-hero-image" role="img" aria-label="Pawthways transparency hero image">
+          <img src="/public/images/paw-transparency.jpg" alt="Pawthways transparency illustration" loading="lazy" />
+        </figure>
+      </div>
+    </section>
+
+    <!-- WHAT WE PUBLISH -->
+    <section id="what-we-publish" class="tp-card" aria-labelledby="publish-title">
+      <h3 id="publish-title">What we publish</h3>
+      <ul>
+        <li>Monthly aggregated totals (no PII)</li>
+        <li>Proof documents: receipts, invoices, and audit summaries (PDF)</li>
+        <li>Monthly CSV extract of donations (when available)</li>
+        <li>Audit reports and reconciliation notes</li>
+      </ul>
+    </section>
+
+    <!-- HOW TO VERIFY -->
+    <section id="how-to-verify" class="tp-card" aria-labelledby="verify-title">
+      <h3 id="verify-title">How to verify (quick)</h3>
+      <ol>
+        <li>Check live aggregates: <code>/api/admin-stats</code></li>
+        <li>Open proof documents and compare totals: <code>/api/transparency-proofs?limit=6</code></li>
+        <li>Match totals with monthly CSV if published</li>
+        <li>Validate generated timestamps vs receipt timestamps</li>
+      </ol>
+
+      <h4>Example cURL</h4>
+      <pre class="tp-code">curl -s https://pawthways-web.vercel.app/api/admin-stats | jq .</pre>
+      <pre class="tp-code">curl -s "https://pawthways-web.vercel.app/api/transparency-proofs?limit=3" | jq .</pre>
+      <p class="tp-note">Replace domain with staging domain in PR checks if needed.</p>
+    </section>
+
+    <!-- 4-STEP VISUAL -->
+    <section id="verification-steps" class="tp-card" aria-labelledby="steps-title">
+      <h3 id="steps-title">4-step verification</h3>
+      <ol class="tp-steps">
+        <li><strong>Step 1:</strong> Check <code>/api/admin-stats</code> for aggregates.</li>
+        <li><strong>Step 2:</strong> Open each proof PDF and check amounts and dates.</li>
+        <li><strong>Step 3:</strong> Reconcile monthly CSV (if available) with the aggregates.</li>
+        <li><strong>Step 4:</strong> Verify the timestamps and signatures; flag anything suspicious.</li>
+      </ol>
+    </section>
+
+    <!-- LIVE KPIS -->
+    <section id="live-kpis" class="tp-card" aria-labelledby="kpis-title">
+      <h3 id="kpis-title">Live aggregates</h3>
+      <div class="tp-kpi-grid">
+        <div class="tp-kpi">
+          <div class="tp-kpi-label">Total revenue</div>
+          <div class="tp-kpi-value" id="tp_total_revenue">—</div>
+        </div>
+        <div class="tp-kpi">
+          <div class="tp-kpi-label">Total reserved / donated</div>
+          <div class="tp-kpi-value" id="tp_total_reserved">—</div>
+        </div>
+        <div class="tp-kpi">
+          <div class="tp-kpi-label">Donation %</div>
+          <div class="tp-kpi-value" id="tp_donation_pct">—</div>
+        </div>
+        <div class="tp-kpi">
+          <div class="tp-kpi-label">Pending</div>
+          <div class="tp-kpi-value" id="tp_pending">—</div>
+        </div>
+      </div>
+      <p class="tp-small">Values sourced from <code>/api/admin-stats</code>. If the endpoint fails, friendly fallback values will display.</p>
+    </section>
+
+    <!-- PROOFS -->
+    <section id="proofs" class="tp-card" aria-labelledby="proofs-title">
+      <h3 id="proofs-title">Recent proofs</h3>
+      <div id="tp_proofs_list" class="tp-proofs" role="list" aria-live="polite">
+        <!-- JS will inject 3–6 thumbnails here. Fallback message appears if none. -->
+        <div class="tp-muted">Loading proofs…</div>
+      </div>
+      <p class="tp-small">All proof PDFs will open in a new tab. <!-- needs-legal-review: Verify PDFs do not contain PII --> </p>
+    </section>
+
+    <!-- WHY WE DONATE -->
+    <section id="why" class="tp-card" aria-labelledby="why-title">
+      <h3 id="why-title">Why we donate</h3>
+      <ul>
+        <li>To fund verified animal rescues and give tangible impact.</li>
+        <li>To keep financial flows open and auditable.</li>
+        <li>To model sustainable giving embedded in product revenue.</li>
+      </ul>
+      <p class="tp-small">We allocate 40% of revenue to verified partners. Our selection criteria prioritize accountability and impact.</p>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="tp-card" aria-labelledby="faq-title">
+      <h3 id="faq-title">FAQ</h3>
+      <dl>
+        <dt>How can I request a detailed report?</dt>
+        <dd>Email <a href="mailto:contact.pawthways@gmail.com">contact.pawthways@gmail.com</a> — subject: "Transparency report request".</dd>
+        <dt>What if an NGO rejects the donation?</dt>
+        <dd>We keep proof documents and reassign funds to verified alternatives; contact us to review specific cases.</dd>
+        <dt>Can I verify timestamps?</dt>
+        <dd>Yes — compare the PDF's generated_at / receipt timestamps with the public aggregates and CSV exports.</dd>
+      </dl>
+    </section>
+
+    <!-- CTA -->
+    <section id="final-cta" class="tp-card" aria-labelledby="cta-title">
+      <h3 id="cta-title">Get involved</h3>
+      <p class="tp-small">Buy a pack or request a report. Every purchase funds real rescues.</p>
+      <a class="tp-cta" href="/shop.html" aria-label="See products">See products — help animals</a>
+    </section>
+
+    <footer class="tp-footer" role="contentinfo">
+      <div>© Pawthways — Transparency & responsibility.</div>
+      <nav aria-label="Legal links">
+        <a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a>
+      </nav>
+    </footer>
+  </main>
+
+  <!-- Page JS -->
+  <script src="/public/js/transparency-commitment.js" defer></script>
+</body>
+</html>

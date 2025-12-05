@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pawthways — Transparency Commitment</title>
+  <meta name="description" content="Pawthways transparency commitment: 40% of revenue donated. Live aggregates, proof documents and step-by-step verification instructions." />
+  <link rel="canonical" href="https://pawthways-web.vercel.app/transparency-commitment.html" />
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebPage",
+    "name":"Transparency Commitment — Pawthways",
+    "url":"https://pawthways-web.vercel.app/transparency-commitment.html",
+    "description":"How Pawthways allocates 40% of revenue to verified animal rescues, with public aggregates and proof documents.",
+    "inLanguage":"en-US",
+    "mainEntity":{
+      "@type":"Organization",
+      "name":"Pawthways",
+      "url":"https://pawthways-web.vercel.app",
+      "description":"Digital products that fund animal rescues — 40% of revenue donated to verified causes.",
+      "logo":"https://pawthways-web.vercel.app/assets/images/logo.png"
+    }
+  }
+  </script>
+
+  <!-- load local theme variables (copied from how-revenue-works for visual parity) -->
+  <style>
+    /* Core :root variables (kept in sync with how-revenue-works.html). Source: how-revenue-works.html. :contentReference[oaicite:1]{index=1} */
+    :root{
+      --bg:#0f1724;
+      --card:#0b1220;
+      --muted:#9aa4b2;
+      --accent:#ffb86b;
+      --white:#eef2f7;
+      --flow-text: var(--white);
+      --svg-node-bg:#aee1ef;
+      --svg-node-text:#0b1220;
+      --svg-node-charity:#ffb3b3;
+      --svg-node-production:#9ecbff;
+      --svg-arrow:#7b8794;
+      --chart-donation:#ff8b8b;
+      --chart-production:#7fb3ff;
+      --tooltip-bg:#07111a;
+      --tooltip-border:rgba(255,255,255,0.03);
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    [data-theme="light"]{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --muted:#64748b;
+      --accent:#f97316;
+      --white:#0f172a;
+      --flow-text:#0b1220;
+      --chart-donation:#ef4444;
+      --chart-production:#3b82f6;
+      --tooltip-bg:#ffffff;
+      --tooltip-border:rgba(0,0,0,0.1);
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--white);-webkit-font-smoothing:antialiased}
+    .wrap{max-width:1100px;margin:32px auto;padding:24px}
+    /* small utility fallback styles — main layout uses external CSS /assets/css/transparency-commitment.css */
+  </style>
+
+  <!-- main page styles (from /assets/css) -->
+  <link rel="stylesheet" href="/assets/css/transparency-commitment.css" />
+
+</head>
+<body>
+  <main class="wrap" role="main">
+
+    <!-- ====== Header (copied from how-revenue-works for parity) ====== -->
+    <!-- Source: how-revenue-works.html — ensures same toggle/last-updated behavior. :contentReference[oaicite:2]{index=2} -->
+    <header>
+      <div class="header-main">
+        <h1>How it works — Revenue Model (Pawthways)</h1>
+        <p class="lead">Full transparency: how Pawthways generates revenue and how 40% is allocated to verified rescues. Real numbers, proof documents and up-to-date KPIs.</p>
+        <div style="margin-top:10px" class="top-row">
+          <div class="badge">40% → Donated</div>
+          <div style="margin-left:12px" class="muted-plain">Fixed, audited distribution • <a href="/transparency.html" style="color:var(--accent);text-decoration:none">View dashboard</a></div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle light/dark theme" aria-pressed="false" type="button">
+          <svg class="theme-icon" aria-hidden="true" viewBox="0 0 24 24">
+            <path id="sunIcon" d="M12 18a6 6 0 100-12 6 6 0 000 12zM12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32l1.41 1.41M2 12h2m16 0h2M4.93 19.07l1.41-1.41m11.32-11.32l1.41-1.41"/>
+            <path id="moonIcon" style="display:none" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+          <span class="theme-label">Theme</span>
+        </button>
+
+        <div class="last-updated-box">
+          <div class="last-updated-label">Last updated</div>
+          <div class="last-updated-value" id="last-updated-large">—</div>
+        </div>
+
+        <div class="share-buttons">
+          <a id="share-twitter" title="Share on Twitter" style="color:var(--muted);text-decoration:none;font-size:14px">Share</a>
+        </div>
+      </div>
+    </header>
+
+    <!-- ====== Intro / Hero ====== -->
+    <section id="intro" class="card full" aria-labelledby="intro-title">
+      <h2 id="intro-title">Transparency Commitment</h2>
+      <p class="small">We reserve <strong>40% of revenue</strong> to fund verified animal rescues. Below: live aggregates, proof documents (PDF), and step-by-step verification instructions.</p>
+      <div class="proofs" id="proofs-preview">
+        <div class="muted-plain">Most recent proofs: </div>
+        <!-- Proof thumbnails injected here by JS -->
+      </div>
+    </section>
+
+    <!-- ====== Quick KPIs + Flow (from how-revenue-works) ====== -->
+    <section class="card full" aria-labelledby="kpi-summary">
+      <h2 id="kpi-summary">Quick numbers (live)</h2>
+      <div class="kpiRow" id="kpiRow">
+        <div class="kpiBox">
+          <div class="label">Total revenue</div>
+          <div class="value" id="k_total_revenue">—</div>
+        </div>
+        <div class="kpiBox">
+          <div class="label">Total reserved / donated</div>
+          <div class="value" id="k_total_reserved">—</div>
+        </div>
+        <div class="kpiBox">
+          <div class="label">Donation %</div>
+          <div class="value" id="k_donation_pct">—</div>
+        </div>
+        <div class="kpiBox">
+          <div class="label">Pending allocations</div>
+          <div class="value" id="k_pending">—</div>
+        </div>
+      </div>
+      <p class="small">Numbers are read from <code>/api/admin-stats</code>. If unreachable, we fallback to defaults.</p>
+    </section>
+
+    <!-- ====== Flow diagram (desktop + mobile) - copied & adapted from how-revenue-works ====== -->
+    <section class="card full" aria-labelledby="flow-title">
+      <h3 id="flow-title">Revenue generation & distribution flow</h3>
+      <div class="flow-wrapper" style="height:420px;">
+        <!-- DESKTOP -->
+        <div id="flow-desktop" role="img" aria-label="Interactive revenue flow (desktop)">
+          <!-- SVG copied from how-revenue-works (desktop view) -->
+          <svg id="flow-svg-desktop" viewBox="0 0 1000 360" preserveAspectRatio="xMidYMid meet">
+            <g id="desktop-group">
+              <g class="node" data-title="Production & Growth (60%)" data-desc="60% for team, marketing, content production">
+                <circle cx="160" cy="80" r="60" fill="var(--svg-node-production)"></circle>
+                <text x="160" y="88" text-anchor="middle">Production & Growth (60%)</text>
+              </g>
+
+              <g class="node" data-title="Digital product sales" data-desc="Sales of products on Whop">
+                <circle cx="150" cy="230" r="50" fill="var(--svg-node-bg)"></circle>
+                <text x="150" y="238" text-anchor="middle">Digital Product Sales</text>
+              </g>
+
+              <g class="node" data-title="Whop (platform)" data-desc="Payment processing platform">
+                <circle cx="380" cy="160" r="55" fill="var(--svg-node-bg)"></circle>
+                <text x="380" y="168" text-anchor="middle">Whop</text>
+              </g>
+
+              <g class="node" data-title="Generated revenue" data-desc="Revenue registered in the DB">
+                <circle cx="620" cy="160" r="78" fill="var(--svg-node-bg)"></circle>
+                <text x="620" y="168" text-anchor="middle">Generated Revenue</text>
+              </g>
+
+              <g class="node" data-title="Donations (40%)" data-desc="40% redirected to verified NGOs">
+                <circle cx="900" cy="230" r="62" fill="var(--svg-node-charity)"></circle>
+                <text x="900" y="238" text-anchor="middle">Charitable Causes (40%)</text>
+              </g>
+
+              <!-- arrows -->
+              <defs>
+                <marker id="arrow-desktop" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto">
+                  <path d="M0,0 L10,5 L0,10 z" fill="var(--svg-arrow)"></path>
+                </marker>
+              </defs>
+
+              <path d="M195 220 C260 200 320 180 345 172"
+                stroke="var(--svg-arrow)" stroke-width="5" stroke-linecap="round" fill="none" marker-end="url(#arrow-desktop)"></path>
+              <path d="M435 160 C500 160 560 160 570 160"
+                stroke="var(--svg-arrow)" stroke-width="5" stroke-linecap="round" fill="none" marker-end="url(#arrow-desktop)"></path>
+              <path d="M680 185 C740 198 800 210 840 222"
+                stroke="var(--svg-arrow)" stroke-width="5" stroke-linecap="round" fill="none" marker-end="url(#arrow-desktop)"></path>
+              <path d="M580 135 C520 118 400 100 260 96"
+                stroke="var(--svg-arrow)" stroke-width="5" stroke-linecap="round" fill="none" marker-end="url(#arrow-desktop)"></path>
+
+            </g>
+          </svg>
+        </div>
+
+        <!-- MOBILE fallback (copied) -->
+        <div id="flow-mobile" aria-hidden="true" role="img" style="display:none;">
+          <svg id="flow-svg-mobile" viewBox="0 0 360 640" style="width:100%;height:100%">
+            <g class="node"><circle cx="180" cy="120" r="46" fill="var(--svg-node-bg)"></circle><text x="180" y="128">Digital Product Sales</text></g>
+            <path d="M180 160 L180 220" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
+            <g class="node"><circle cx="180" cy="260" r="46" fill="var(--svg-node-bg)"></circle><text x="180" y="268">Whop</text></g>
+            <path d="M180 300 L180 360" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
+            <g class="node"><circle cx="180" cy="400" r="56" fill="var(--svg-node-bg)"></circle><text x="180" y="408">Generated Revenue</text></g>
+            <path d="M180 440 L180 500" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
+            <g class="node"><circle cx="180" cy="560" r="56" fill="var(--svg-node-charity)"></circle><text x="180" y="568">Charitable Causes (40%)</text></g>
+            <defs>
+              <marker id="arrow-mobile" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="var(--svg-arrow)"></path></marker>
+            </defs>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- ====== Chart + CTA (canvas from how-revenue-works) ====== -->
+    <section class="card full" aria-labelledby="chart-title">
+      <h4 id="chart-title">Interactive distribution</h4>
+      <p class="muted">Real-time when the endpoint is available. Click legends to toggle slices.</p>
+      <div style="margin-top:10px">
+        <canvas id="revenuePie" width="320" height="320" aria-label="Revenue distribution pie chart" role="img"></canvas>
+      </div>
+      <div style="margin-top:12px">Last updated: <span id="last-updated">--</span></div>
+      <div style="margin-top:14px">
+        <a href="/shop.html" class="cta">Buy a pack — 40% goes to animal rescues</a>
+        <a style="margin-left:10px;color:var(--muted)" href="/transparency.html">Full dashboard</a>
+      </div>
+    </section>
+
+    <!-- ====== How to verify + cURL ====== -->
+    <section class="card full" aria-labelledby="verify-title">
+      <h3 id="verify-title">How to verify (quick)</h3>
+      <ol>
+        <li>Check live aggregates: <code>/api/admin-stats</code></li>
+        <li>Open proof documents and compare totals: <code>/api/transparency-proofs?limit=6</code></li>
+        <li>Match totals with monthly CSV if published</li>
+        <li>Validate generated timestamps vs receipt timestamps</li>
+      </ol>
+      <h4>Example cURL</h4>
+      <pre class="note">curl -s https://pawthways-web.vercel.app/api/admin-stats | jq .</pre>
+      <pre class="note">curl -s "https://pawthways-web.vercel.app/api/transparency-proofs?limit=3" | jq .</pre>
+      <p class="small">Replace domain with staging domain in PR checks if needed.</p>
+    </section>
+
+    <!-- ====== FAQ + Footer ====== -->
+    <section class="card full" aria-labelledby="faq-title">
+      <h3 id="faq-title">FAQ</h3>
+      <p><strong>How can I request a detailed report?</strong> — Email <a href="mailto:contact.pawthways@gmail.com">contact.pawthways@gmail.com</a>.</p>
+      <p><strong>What if an NGO rejects the donation?</strong> — We keep proof docs and reassign funds to verified alternatives; contact us to review specifics.</p>
+      <p><strong>Can I verify timestamps?</strong> — Yes — compare generated_at fields in proofs with aggregates.</p>
+    </section>
+
+    <footer>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+        <div>© Pawthways — Transparency & responsibility.</div>
+        <nav><a href="/terms.html">Terms</a> · <a href="/privacy.html">Privacy</a></nav>
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- Tooltip for SVG nodes (copied behavior expected by JS) -->
+  <div id="svgTooltip" class="svg-tooltip" role="tooltip" aria-hidden="true" style="display:none"></div>
+
+  <!-- =========== Scripts =========== -->
+  <!-- Chart loader: tries local /assets/js/chart.umd.min.js and falls back to CDN (logic adapted from how-revenue-works). Source: how-revenue-works.html. :contentReference[oaicite:3]{index=3} -->
+  <script src="/assets/js/chart-loader.js" defer></script>
+
+  <!-- Proofs fallback + revenue chart init (from how-revenue-works) -->
+  <script src="/assets/js/proof-fallback.js" defer></script>
+  <script src="/assets/js/revenue-init-prod.js" defer></script>
+
+  <!-- Our page-specific defensive JS (reads /api/admin-stats and /api/transparency-proofs?limit=6) -->
+  <script src="/assets/js/transparency-commitment.js" defer></script>
+
+  <!-- Theme toggle + SVG tooltip + small initialization are inside revenue-init-prod.js and chart-loader.js (same behaviour as how-revenue-works) -->
+</body>
+</html>
