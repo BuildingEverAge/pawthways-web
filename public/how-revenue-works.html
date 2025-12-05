@@ -649,12 +649,28 @@ const config = {
 };
     let chart = null;
     function initChartIfAvailable(){ 
-      if (!ctx) return; 
-      try{ 
-        chart = (typeof Chart !== 'undefined') ? new Chart(ctx, config) : null;
-        window.revenueChartInstance = chart;
-      }catch(e){ console.warn('chart init',e); } 
-    }
+  if (!ctx) return; 
+  try{ 
+    chart = (typeof Chart !== 'undefined') ? new Chart(ctx, config) : null;
+    window.revenueChartInstance = chart;
+
+    // --- FORCE LEGEND & TOOLTIP COLORS: pegar aquí (Opcion A) ---
+    try {
+      const chartInst = window.revenueChartInstance || chart;
+      if (chartInst && chartInst.options && chartInst.options.plugins) {
+        const flowText = getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || '#1e293b';
+        if (!chartInst.options.plugins.legend) chartInst.options.plugins.legend = {};
+        if (!chartInst.options.plugins.legend.labels) chartInst.options.plugins.legend.labels = {};
+        chartInst.options.plugins.legend.labels.color = flowText;
+        if (!chartInst.options.plugins.tooltip) chartInst.options.plugins.tooltip = {};
+        chartInst.options.plugins.tooltip.titleColor = flowText;
+        chartInst.options.plugins.tooltip.bodyColor = flowText;
+        chartInst.update();
+      }
+    } catch (e) { console.warn('set legend color error', e); }
+    // --- end patch ---
+  }catch(e){ console.warn('chart init',e); } 
+}
     function setLastUpdated(ts){ const large = document.getElementById('last-updated-large'); const small = document.getElementById('last-updated'); if (large) large.textContent = ts ? new Date(ts).toLocaleString() : '--'; if (small) small.textContent = ts ? new Date(ts).toLocaleString() : '--'; }
     async function fetchAdminStats(){
       const adminEndpoint = '/api/admin-stats';
