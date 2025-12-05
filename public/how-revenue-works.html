@@ -199,60 +199,62 @@ header{
     .theme-toggle:focus{outline:2px solid var(--accent);outline-offset:2px}
     .theme-icon{width:18px;height:18px;fill:currentColor}
 
-    /* SVG improvements */
-    #flow-svg text{
-      font-size:15px;
-      font-weight:700;
-      pointer-events:none;
-      text-anchor:middle;
-      fill:var(--flow-text);    /* usa la variable para alternar color */
-      dominant-baseline:middle;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.35);
-    }
-    
-    #flow-svg .node circle{
+/* ===========================
+   SVG: reglas compartidas para desktop + mobile
+   =========================== */
+#flow-svg-desktop text,
+#flow-svg-mobile text {
+  font-size:15px;
+  font-weight:700;
+  pointer-events:none;
+  text-anchor:middle;
+  fill:var(--flow-text);
+  dominant-baseline:middle;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+}
+
+#flow-svg-desktop .node circle,
+#flow-svg-mobile .node circle {
   transition:all 0.3s ease;
 }
-    
-    #flow-svg .node:hover circle{filter:brightness(1.1);stroke:var(--accent);stroke-width:2}
 
-    @media (max-width:600px){
-  /* Dar más alto al bloque del diagrama en móvil */
-  .flow-wrapper{
-    height:380px; /* puedes subir a 400 si quieres más aire */
-  }
-
-  /* Hacer más grandes los nodos (círculos + texto) en móvil */
-  #flow-svg .node{
-    transform-box: fill-box;
-    transform-origin: center;
-    transform: scale(1.6); /* prueba 1.2–1.4 según lo veas */
-  }
-
-  /* Texto un poco más grande para que siga siendo legible */
-  #flow-svg text{
-    font-size:12px;
-  }
-
-  .theme-toggle{
-    font-size:0;
-    padding:8px;
-  }
-  .theme-toggle .theme-icon{
-    margin:0;
-  }
+#flow-svg-desktop .node:hover circle,
+#flow-svg-mobile .node:hover circle {
+  filter:brightness(1.1);
+  stroke:var(--accent);
+  stroke-width:2;
 }
-    /* PARCHÉ: forzar fill de los círculos y evitar bolas negras en modo claro */
-#flow-svg .node circle {
-  transition: all 0.3s ease;
-  /* preferimos variables de tema; !important para dominar inline/fill heredado */
+
+/* Forzar fill y color de texto con variables de tema */
+#flow-svg-desktop .node circle,
+#flow-svg-mobile .node circle {
   fill: var(--svg-node-bg) !important;
   stroke: transparent !important;
 }
+#flow-svg-desktop text,
+#flow-svg-mobile text { fill: var(--flow-text) !important; }
 
-/* asegurar el texto del SVG use la variable correcta */
-#flow-svg text { fill: var(--flow-text) !important; }
+/* Contenedor general */
+.flow-wrapper { overflow:hidden; }
 
+/* Mostrar/ocultar SVGS según ancho */
+#flow-desktop { display:block; }
+#flow-mobile  { display:none; }
+
+/* Responsive switch: en pantallas pequeñas mostramos la versión móvil */
+@media (max-width:700px) {
+  #flow-desktop { display:none !important; }
+  #flow-mobile  { display:block !important; }
+
+  /* forzar altura más generosa para mobile */
+  .flow-wrapper { height: 640px; } /* coincide con viewBox mobile */
+
+  /* Texto y nodos en mobile (mejora legibilidad) */
+  #flow-svg-mobile text { font-size:14px; }
+  #flow-svg-mobile .node circle { transition: all 0.2s ease; }
+}
+
+ 
 /* PARCHÉ: evitar solapamientos del last-updated / theme toggle */
 .header-actions { position: relative; z-index: 2; }
 .last-updated-box { position: relative; z-index: 3; text-align: right; }
@@ -347,41 +349,86 @@ header{
       <article class="card" aria-labelledby="flow-title">
         <h3 id="flow-title">Revenue generation & distribution flow</h3>
         <p class="muted" style="margin-top:6px">Hover / tap the nodes to see details. Click proofs to inspect receipts.</p>
-        <div class="flow-wrapper">
-          <!-- SVG flow updated to use CSS variables -->
-          <svg id="flow-svg" viewBox="0 0 1000 300" role="img" aria-label="Interactive revenue flow diagram" style="width:100%;height:100%">
-            <!-- Nodes: identical to original but with variables -->
-            <g class="node" data-title="Digital product sales" data-desc="Sales of products on Whop (artbooks, AI packs, music)">
-              <circle cx="170" cy="200" r="40" fill="var(--svg-node-bg)"></circle>
-              <text x="170" y="210">Digital Product Sales</text>
-            </g>
-            <g class="node" data-title="Whop (platform)" data-desc="Payment processing platform.">
-              <circle cx="420" cy="120" r="46" fill="var(--svg-node-bg)"></circle>
-              <text x="420" y="128">Whop</text>
-            </g>
-            <g class="node" data-title="Generated revenue" data-desc="Revenue registered in the DB (sales).">
-              <circle cx="620" cy="120" r="64" fill="var(--svg-node-bg)"></circle>
-              <text x="620" y="118">Generated Revenue</text>
-            </g>
-            <g class="node" data-title="Donations (40%)" data-desc="40% redirected to verified NGOs (rescue, vet care, rehab)">
-              <circle cx="920" cy="200" r="54" fill="var(--svg-node-charity)"></circle>
-              <text x="920" y="208">Charitable Causes (40%)</text>
-            </g>
-            <g class="node" data-title="Production & growth (60%)" data-desc="60% for team, marketing and content production">
-              <circle cx="160" cy="30" r="48" fill="var(--svg-node-production)"></circle>
-              <text x="160" y="36">Production & Growth (60%)</text>
-            </g>
-            <defs>
-              <marker id="arrow" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto">
-                <path d="M0,0 L10,5 L0,10 z" fill="var(--svg-arrow)"></path>
-              </marker>
-            </defs>
-            <path d="M210 195 C300 170 360 140 380 135" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
-            <path d="M470 120 C540 120 580 120 610 120" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
-            <path d="M680 150 C760 170 820 185 870 195" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
-            <path d="M680 100 C560 70 300 48 220 48" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow)"></path>
-          </svg>
-        </div>
+        <!-- START: Responsive SVG pair (DESKTOP + MOBILE) -->
+<div class="flow-wrapper">
+
+  <!-- DESKTOP: visible en pantallas grandes -->
+  <div id="flow-desktop" aria-hidden="false" role="img">
+    <svg id="flow-svg-desktop" viewBox="0 0 1000 300" style="width:100%;height:100%" aria-label="Interactive revenue flow diagram (desktop)">
+      <!-- ========== (COPIA EXACTA de tu SVG original para desktop) ========== -->
+      <g class="node" data-title="Digital product sales" data-desc="Sales of products on Whop (artbooks, AI packs, music)">
+        <circle cx="170" cy="200" r="40" fill="var(--svg-node-bg)"></circle>
+        <text x="170" y="210">Digital Product Sales</text>
+      </g>
+      <g class="node" data-title="Whop (platform)" data-desc="Payment processing platform.">
+        <circle cx="420" cy="120" r="46" fill="var(--svg-node-bg)"></circle>
+        <text x="420" y="128">Whop</text>
+      </g>
+      <g class="node" data-title="Generated revenue" data-desc="Revenue registered in the DB (sales).">
+        <circle cx="620" cy="120" r="64" fill="var(--svg-node-bg)"></circle>
+        <text x="620" y="118">Generated Revenue</text>
+      </g>
+      <g class="node" data-title="Donations (40%)" data-desc="40% redirected to verified NGOs (rescue, vet care, rehab)">
+        <circle cx="920" cy="200" r="54" fill="var(--svg-node-charity)"></circle>
+        <text x="920" y="208">Charitable Causes (40%)</text>
+      </g>
+      <g class="node" data-title="Production & growth (60%)" data-desc="60% for team, marketing and content production">
+        <circle cx="160" cy="30" r="48" fill="var(--svg-node-production)"></circle>
+        <text x="160" y="36">Production & Growth (60%)</text>
+      </g>
+      <defs>
+        <marker id="arrow-desktop" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto">
+          <path d="M0,0 L10,5 L0,10 z" fill="var(--svg-arrow)"></path>
+        </marker>
+      </defs>
+      <path d="M210 195 C300 170 360 140 380 135" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-desktop)"></path>
+      <path d="M470 120 C540 120 580 120 610 120" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-desktop)"></path>
+      <path d="M680 150 C760 170 820 185 870 195" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-desktop)"></path>
+      <path d="M680 100 C560 70 300 48 220 48" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-desktop)"></path>
+      <!-- ================================================================== -->
+    </svg>
+  </div>
+
+  <!-- MOBILE: version simplificada, apilada y grandes nodos -->
+  <div id="flow-mobile" aria-hidden="true" role="img">
+    <svg id="flow-svg-mobile" viewBox="0 0 360 640" style="width:100%;height:100%" aria-label="Interactive revenue flow diagram (mobile)">
+      <!-- Simple vertical layout: nodos grandes y flechas cortas -->
+      <g class="node" data-title="Digital product sales" data-desc="Sales of products (artbooks, packs, music)">
+        <circle cx="180" cy="120" r="46" fill="var(--svg-node-bg)"></circle>
+        <text x="180" y="128">Digital Product Sales</text>
+      </g>
+
+      <path d="M180 160 L180 220" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
+
+      <g class="node" data-title="Whop (platform)" data-desc="Payment processing">
+        <circle cx="180" cy="260" r="46" fill="var(--svg-node-bg)"></circle>
+        <text x="180" y="268">Whop</text>
+      </g>
+
+      <path d="M180 300 L180 360" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
+
+      <g class="node" data-title="Generated revenue" data-desc="Revenue in DB">
+        <circle cx="180" cy="400" r="56" fill="var(--svg-node-bg)"></circle>
+        <text x="180" y="408">Generated Revenue</text>
+      </g>
+
+      <path d="M180 440 L180 500" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-mobile)"></path>
+
+      <g class="node" data-title="Charitable Causes (40%)" data-desc="40% to verified NGOs">
+        <circle cx="180" cy="560" r="56" fill="var(--svg-node-charity)"></circle>
+        <text x="180" y="568">Charitable Causes (40%)</text>
+      </g>
+
+      <defs>
+        <marker id="arrow-mobile" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="var(--svg-arrow)"></path>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+
+</div>
+<!-- END: Responsive SVG pair -->
       </article>
 
       <aside class="card" aria-labelledby="chart-title">
@@ -488,32 +535,35 @@ header{
     window.Chart = function(ctx, config){ this.data = (config && config.data) ? config.data : { datasets: [] }; this.update = function(){}; };
     /* Chart shim injected (silenced) */
   }
-  // SVG tooltip logic (same as yours but updated strong color)
   (function(){
-    const svg = document.getElementById('flow-svg');
-    const tooltip = document.getElementById('svgTooltip');
-    function showTooltip(evt, title, desc) {
-      const clientX = evt.clientX || (evt.touches && evt.touches[0] && evt.touches[0].clientX) || 0;
-      const clientY = evt.clientY || (evt.touches && evt.touches[0] && evt.touches[0].clientY) || 0;
-      tooltip.style.left = (clientX + 12) + 'px';
-      tooltip.style.top = (clientY + 12) + 'px';
-      tooltip.innerHTML = '<strong style="color:var(--flow-text)">' + title + '</strong><div style="margin-top:6px;font-size:13px;color:var(--flow-text)">' + desc + '</div>';
-      tooltip.style.display = 'block';
-      tooltip.setAttribute('aria-hidden','false');
-    }
-    function hideTooltip(){ tooltip.style.display = 'none'; tooltip.setAttribute('aria-hidden','true'); }
-    if (svg) {
-      svg.querySelectorAll('.node').forEach(g => {
-        const title = g.getAttribute('data-title') || '';
-        const desc = g.getAttribute('data-desc') || '';
-        g.style.cursor = 'pointer';
-        g.addEventListener('mousemove', (e)=> showTooltip(e, title, desc));
-        g.addEventListener('mouseleave', hideTooltip);
-        g.addEventListener('touchstart', (e)=> { e.preventDefault(); showTooltip(e.touches[0], title, desc); }, {passive:false});
-        g.addEventListener('touchend', hideTooltip);
-      });
-    }
-  })();
+  const tooltip = document.getElementById('svgTooltip');
+  // seleccionar nodos de ambos SVGs
+  const svgNodes = document.querySelectorAll('#flow-svg-desktop .node, #flow-svg-mobile .node');
+
+  function showTooltip(evt, title, desc) {
+    const clientX = evt.clientX || (evt.touches && evt.touches[0] && evt.touches[0].clientX) || 0;
+    const clientY = evt.clientY || (evt.touches && evt.touches[0] && evt.touches[0].clientY) || 0;
+    tooltip.style.left = (clientX + 12) + 'px';
+    tooltip.style.top = (clientY + 12) + 'px';
+    tooltip.innerHTML = '<strong style="color:var(--flow-text)">' + title + '</strong><div style="margin-top:6px;font-size:13px;color:var(--flow-text)">' + desc + '</div>';
+    tooltip.style.display = 'block';
+    tooltip.setAttribute('aria-hidden','false');
+  }
+  function hideTooltip(){ tooltip.style.display = 'none'; tooltip.setAttribute('aria-hidden','true'); }
+
+  if (svgNodes && svgNodes.length) {
+    svgNodes.forEach(g => {
+      const title = g.getAttribute('data-title') || '';
+      const desc = g.getAttribute('data-desc') || '';
+      g.style.cursor = 'pointer';
+      g.addEventListener('mousemove', (e)=> showTooltip(e, title, desc));
+      g.addEventListener('mouseleave', hideTooltip);
+      g.addEventListener('touchstart', (e)=> { e.preventDefault(); showTooltip(e.touches[0], title, desc); }, {passive:false});
+      g.addEventListener('touchend', hideTooltip);
+    });
+  }
+})();
+
 
   // Chart + fetch + proofs fetch
   (function(){
