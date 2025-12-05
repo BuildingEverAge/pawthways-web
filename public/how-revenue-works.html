@@ -631,7 +631,7 @@ const config = {
       legend:{ 
         position:'bottom', 
         labels:{ 
-          color: getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || '#1e293b',
+          color: initialTextColor,
           font: {
             size: 13,
             weight: '600'
@@ -649,42 +649,12 @@ const config = {
 };
     let chart = null;
     function initChartIfAvailable(){ 
-  if (!ctx) return; 
-  try{ 
-    if (typeof Chart !== 'undefined') {
-  const defaultColor = getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || (document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#eef2f7');
-  Chart.defaults.color = defaultColor;
-  Chart.defaults.plugins = Chart.defaults.plugins || {};
-  Chart.defaults.plugins.legend = Chart.defaults.plugins.legend || {};
-  Chart.defaults.plugins.legend.labels = Chart.defaults.plugins.legend.labels || {};
-  Chart.defaults.plugins.legend.labels.color = defaultColor;
-  Chart.defaults.plugins.tooltip = Chart.defaults.plugins.tooltip || {};
-  Chart.defaults.plugins.tooltip.titleColor = defaultColor;
-  Chart.defaults.plugins.tooltip.bodyColor = defaultColor;
-}
-    // instancia del chart
-    chart = (typeof Chart !== 'undefined') ? new Chart(ctx, config) : null;
-    window.revenueChartInstance = chart;
-
-    // FORZAR colores de leyenda/tooltip desde las variables CSS
-    try {
-      const flowText = getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || (document.documentElement.getAttribute('data-theme') === 'light' ? '#0f172a' : '#eef2f7');
-      const chartInst = window.revenueChartInstance || chart;
-      if (chartInst && chartInst.options && chartInst.options.plugins) {
-        // leyenda
-        chartInst.options.plugins.legend = chartInst.options.plugins.legend || {};
-        chartInst.options.plugins.legend.labels = chartInst.options.plugins.legend.labels || {};
-        chartInst.options.plugins.legend.labels.color = flowText;
-        // tooltip
-        chartInst.options.plugins.tooltip = chartInst.options.plugins.tooltip || {};
-        chartInst.options.plugins.tooltip.titleColor = flowText;
-        chartInst.options.plugins.tooltip.bodyColor = flowText;
-        // forzar update
-        try { chartInst.update(); } catch(e) { console.warn('chart update after init failed', e); }
-      }
-    } catch (e) { console.warn('set legend color error', e); }
-  } catch(e){ console.warn('chart init', e); } 
-}
+      if (!ctx) return; 
+      try{ 
+        chart = (typeof Chart !== 'undefined') ? new Chart(ctx, config) : null;
+        window.revenueChartInstance = chart;
+      }catch(e){ console.warn('chart init',e); } 
+    }
     function setLastUpdated(ts){ const large = document.getElementById('last-updated-large'); const small = document.getElementById('last-updated'); if (large) large.textContent = ts ? new Date(ts).toLocaleString() : '--'; if (small) small.textContent = ts ? new Date(ts).toLocaleString() : '--'; }
     async function fetchAdminStats(){
       const adminEndpoint = '/api/admin-stats';
@@ -797,24 +767,18 @@ const config = {
 
     const savedTheme = localStorage.getItem('pawthways-theme') || 'dark';
 
-    // === Sincronizar color del chart con el tema activo ===
-try {
-  const flowText = getComputedStyle(document.documentElement).getPropertyValue('--flow-text').trim() || (theme === 'light' ? '#0f172a' : '#eef2f7');
-  if (window.revenueChartInstance && window.revenueChartInstance.options) {
-    const inst = window.revenueChartInstance;
-    inst.options.plugins = inst.options.plugins || {};
-    inst.options.plugins.legend = inst.options.plugins.legend || {};
-    inst.options.plugins.legend.labels = inst.options.plugins.legend.labels || {};
-    inst.options.plugins.legend.labels.color = flowText;
+    function applyTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
 
-    inst.options.plugins.tooltip = inst.options.plugins.tooltip || {};
-    inst.options.plugins.tooltip.titleColor = flowText;
-    inst.options.plugins.tooltip.bodyColor = flowText;
-
-    try { inst.update(); } catch(e) { console.warn('theme -> chart update failed', e); }
-  }
-} catch(e) { console.warn('theme->chart sync error', e); }
-
+      if (theme === 'light') {
+        sunIcon.style.display = 'none';
+        moonIcon.style.display = 'block';
+        btn.setAttribute('aria-pressed', 'true');
+      } else {
+        sunIcon.style.display = 'block';
+        moonIcon.style.display = 'none';
+        btn.setAttribute('aria-pressed', 'false');
+      }
 
       if (window.revenueChartInstance && window.revenueChartInstance.data) {
         const isDark = theme === 'dark';
