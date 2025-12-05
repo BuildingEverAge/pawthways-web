@@ -202,6 +202,13 @@ header{
 /* ===========================
    SVG: reglas compartidas para desktop + mobile
    =========================== */
+   /* Desktop diagram improvements (final) */
+.flow-wrapper { height: 420px; }             /* más alto para que no se corte la bola superior */
+#flow-svg-desktop { width: 100%; height: 100%; display:block; }
+
+#desktop-group { transform: translateY(36px); } /* baja todo el grupo lo suficiente */
+
+
 #flow-svg-desktop text,
 #flow-svg-mobile text {
   font-size:15px;
@@ -353,41 +360,67 @@ header{
 <div class="flow-wrapper">
 
   <!-- DESKTOP: visible en pantallas grandes -->
-  <div id="flow-desktop" aria-hidden="false" role="img">
-    <svg id="flow-svg-desktop" viewBox="0 0 1000 300" style="width:100%;height:100%" aria-label="Interactive revenue flow diagram (desktop)">
-      <!-- ========== (COPIA EXACTA de tu SVG original para desktop) ========== -->
+  <!-- DESKTOP: nueva versión mejorada -->
+<div id="flow-desktop" aria-hidden="false" role="img">
+  <svg id="flow-svg-desktop" viewBox="0 0 1000 360" preserveAspectRatio="xMidYMid meet" aria-label="Interactive revenue flow diagram (desktop)">
+    <g id="desktop-group">
+
+      <!-- Production & Growth -->
+      <g class="node" data-title="Production & Growth (60%)" data-desc="60% for team, marketing, content production">
+        <circle cx="160" cy="80" r="60"></circle>
+        <text x="160" y="88">Production & Growth (60%)</text>
+      </g>
+
+      <!-- Digital Product Sales -->
       <g class="node" data-title="Digital product sales" data-desc="Sales of products on Whop (artbooks, AI packs, music)">
-        <circle cx="170" cy="200" r="40" fill="var(--svg-node-bg)"></circle>
-        <text x="170" y="210">Digital Product Sales</text>
+        <circle cx="150" cy="230" r="50"></circle>
+        <text x="150" y="238">Digital Product Sales</text>
       </g>
-      <g class="node" data-title="Whop (platform)" data-desc="Payment processing platform.">
-        <circle cx="420" cy="120" r="46" fill="var(--svg-node-bg)"></circle>
-        <text x="420" y="128">Whop</text>
+
+      <!-- Whop -->
+      <g class="node" data-title="Whop (platform)" data-desc="Payment processing platform">
+        <circle cx="380" cy="160" r="55"></circle>
+        <text x="380" y="168">Whop</text>
       </g>
-      <g class="node" data-title="Generated revenue" data-desc="Revenue registered in the DB (sales).">
-        <circle cx="620" cy="120" r="64" fill="var(--svg-node-bg)"></circle>
-        <text x="620" y="118">Generated Revenue</text>
+
+      <!-- Generated Revenue -->
+      <g class="node" data-title="Generated revenue" data-desc="Revenue registered in the DB">
+        <circle cx="620" cy="160" r="78"></circle>
+        <text x="620" y="168">Generated Revenue</text>
       </g>
-      <g class="node" data-title="Donations (40%)" data-desc="40% redirected to verified NGOs (rescue, vet care, rehab)">
-        <circle cx="920" cy="200" r="54" fill="var(--svg-node-charity)"></circle>
-        <text x="920" y="208">Charitable Causes (40%)</text>
+
+      <!-- Charity -->
+      <g class="node" data-title="Donations (40%)" data-desc="40% redirected to verified NGOs">
+        <circle cx="900" cy="230" r="62"></circle>
+        <text x="900" y="238">Charitable Causes (40%)</text>
       </g>
-      <g class="node" data-title="Production & growth (60%)" data-desc="60% for team, marketing and content production">
-        <circle cx="160" cy="30" r="48" fill="var(--svg-node-production)"></circle>
-        <text x="160" y="36">Production & Growth (60%)</text>
-      </g>
+
+      <!-- Arrows -->
       <defs>
-        <marker id="arrow-desktop" markerWidth="10" markerHeight="10" refX="6" refY="5" orient="auto">
-          <path d="M0,0 L10,5 L0,10 z" fill="var(--svg-arrow)"></path>
+        <marker id="arrow-desktop" markerWidth="14" markerHeight="14" refX="10" refY="7" orient="auto">
+          <path d="M0,0 L14,7 L0,14 z" fill="var(--svg-arrow)"></path>
         </marker>
       </defs>
-      <path d="M210 195 C300 170 360 140 380 135" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-desktop)"></path>
-      <path d="M470 120 C540 120 580 120 610 120" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-desktop)"></path>
-      <path d="M680 150 C760 170 820 185 870 195" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-desktop)"></path>
-      <path d="M680 100 C560 70 300 48 220 48" stroke="var(--svg-arrow)" stroke-width="3" fill="none" marker-end="url(#arrow-desktop)"></path>
-      <!-- ================================================================== -->
-    </svg>
-  </div>
+
+      <!-- Digital Product Sales -> Whop -->
+      <path d="M190 220 C260 200 330 170 360 165"
+            stroke="var(--svg-arrow)" stroke-width="4" fill="none" marker-end="url(#arrow-desktop)"></path>
+
+      <!-- Whop -> Generated Revenue -->
+      <path d="M435 160 C500 160 560 160 595 160"
+            stroke="var(--svg-arrow)" stroke-width="4" fill="none" marker-end="url(#arrow-desktop)"></path>
+
+      <!-- Generated Revenue -> Charity -->
+      <path d="M700 185 C780 205 850 220 880 225"
+            stroke="var(--svg-arrow)" stroke-width="4" fill="none" marker-end="url(#arrow-desktop)"></path>
+
+      <!-- Generated Revenue -> Production & Growth -->
+      <path d="M580 135 C500 110 320 90 220 90"
+            stroke="var(--svg-arrow)" stroke-width="4" fill="none" marker-end="url(#arrow-desktop)"></path>
+
+    </g>
+  </svg>
+</div>
 
   <!-- MOBILE: version simplificada, apilada y grandes nodos -->
   <div id="flow-mobile" aria-hidden="true" role="img">
