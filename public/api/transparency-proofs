@@ -1,0 +1,26 @@
+﻿[
+  {
+    "id": "proof-001",
+    "title": "Rescue A Donation",
+    "date": "2025-12-01",
+    "amount": "€100.00",
+    "thumbnail_url": "/assets/img/proof-placeholder.png",
+    "doc_url": "/assets/csv/transparency-latest.csv"
+  },
+  {
+    "id": "proof-002",
+    "title": "Rescue B Donation",
+    "date": "2025-12-07",
+    "amount": "€250.00",
+    "thumbnail_url": "/assets/img/proof-placeholder.png",
+    "doc_url": "/assets/csv/transparency-latest.csv"
+  },
+  {
+    "id": "proof-003",
+    "title": "Emergency Rescue Fund",
+    "date": "2025-12-05",
+    "amount": "€150.00",
+    "thumbnail_url": "/assets/img/proof-placeholder.png",
+    "doc_url": "/assets/csv/transparency-latest.csv"
+  }
+]

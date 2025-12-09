@@ -1,0 +1,8 @@
+﻿{
+  "total_sales": 5000.00,
+  "total_reserved": 2000.00,
+  "total_donated": 1500.00,
+  "pending": 500.00,
+  "generated_at": "2025-12-09T21:00:00Z",
+  "needs_legal_review": false
+}
