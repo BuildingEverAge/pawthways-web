@@ -1,0 +1,112 @@
+:root{
+  --bg:#ffffff;
+  --fg:#0b1220;
+  --muted:#6b7280;
+  --accent:#0ea5a4;
+  --success:#16a34a;
+  --danger:#dc2626;
+  --card:#f8fafc;
+  --radius:12px;
+  --maxw:1100px;
+  --chart-donation:#ef4444;
+  --chart-production:#3b82f6;
+  --flow-text: #0b1220;
+}
+[data-theme="dark"]{
+  --bg:#0b1220;
+  --fg:#e6eef3;
+  --muted:#9aa6b2;
+  --card:#071116;
+  --chart-donation:#ff8b8b;
+  --chart-production:#7fb3ff;
+  --flow-text: #e6eef3;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial; background:var(--bg);color:var(--fg);}
+.site{max-width:var(--maxw);margin:28px auto;padding:24px}
+header{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.logo{display:flex;align-items:center;gap:10px}
+.badge{background:var(--accent);color:#fff;padding:6px 10px;border-radius:999px;font-weight:600}
+
+/* Hero */
+.hero{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:center;margin-top:20px}
+.hero h1{font-size:28px;margin:0}
+.hero p{color:var(--muted);margin-top:8px}
+.hero-ctas{margin-top:16px;display:flex;gap:10px}
+.btn{
+  padding:10px 14px;
+  border-radius:10px;
+  border:0;
+  cursor:pointer;
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.btn-primary{background:var(--fg);color:var(--bg)}
+.btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06)}
+
+/* Focus visible - ACCESIBILIDAD */
+.btn:focus-visible, a:focus-visible, button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 10px;
+}
+
+/* Stats card */
+.card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 4px 18px rgba(2,6,23,0.06)}
+.card a { outline-offset: 2px; }
+.stat{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.stat strong{font-size:18px}
+
+/* Sections */
+section{margin-top:28px}
+h2{font-size:20px;margin:0 0 8px 0}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+
+/* Proofs */
+.proofs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.proof{background:rgba(0,0,0,0.03);padding:8px;border-radius:10px;min-height:120px;display:flex;flex-direction:column}
+.proof img{width:100%;height:120px;object-fit:cover;border-radius:8px}
+.proof a{margin-top:auto;text-decoration:none;color:var(--accent)}
+
+/* Timeline */
+.timeline{display:flex;flex-direction:column;gap:10px}
+.timeline .step{display:flex;gap:12px;padding:8px;border-radius:8px}
+.timeline .step:focus{ background: rgba(14,165,164,0.04); outline: none; }
+.timeline .dot{width:12px;height:12px;border-radius:999px;background:var(--accent);flex:0 0 12px;margin-top:6px}
+
+/* Progress bar */
+#donationBarContainer{ height:8px; background:var(--card); border-radius:999px; overflow:hidden; margin-top:10px; }
+#donationBar{ height:8px; width:0%; background:var(--success); transition:width 0.6s ease; }
+
+/* Proof placeholder */
+.proof-placeholder { display:flex; align-items:center; justify-content:center; height:120px; color:var(--muted); font-size:13px; background:linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01)); border-radius:8px; }
+
+@media (max-width:900px){
+  .hero{grid-template-columns:1fr;}
+  .proofs{grid-template-columns:repeat(2,1fr)}
+  .grid-3{grid-template-columns:1fr}
+  .hero h1{font-size:22px}
+}
+@media (max-width:420px){
+  .proofs{grid-template-columns:1fr}
+}
+
+/* Accessibility helpers */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Philosophy section spacing */
+#philosophy { margin-top:28px; }
+#philosophy .card { padding:18px; }
+@media (max-width:900px){ 
+  #philosophy .card { padding:14px; } 
+}
+/* disabled link look */
+a.disabled { 
+  opacity:0.5; 
+  pointer-events:none; 
+  cursor:default; 
+}
