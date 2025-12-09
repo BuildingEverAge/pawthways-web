@@ -1,4 +1,5 @@
 ﻿<!doctype html>
+<!-- QA: waiting for curl validation -->
 <html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8" />
@@ -6,6 +7,10 @@
   <title>Our Transparency Commitment — Pawthways</title>
   <meta name="description" content="Pawthways reserves 40% of revenue for rescues. Public proofs, monthly aggregates, CSVs and a 4-step verification process." />
   <link rel="canonical" href="https://pawthways-web.vercel.app/transparency-commitment.html" />
+  <meta property="og:title" content="Our Transparency Commitment — Pawthways">
+<meta property="og:description" content="Pawthways reserves 40% of revenue for rescues. Monthly aggregates, proofs (PDFs), CSV exports and a 4-step verification process.">
+<meta property="og:image" content="https://pawthways-web.vercel.app/assets/img/hero-1200.jpg">
+<meta name="twitter:card" content="summary_large_image">
   <!-- JSON-LD -->
   <script type="application/ld+json">
 {
@@ -31,7 +36,8 @@
   <link rel="stylesheet" href="/assets/css/transparency-commitment.css">
 </head>
 <body>
-  <div class="site" id="site">
+  <a href="#main-content" class="sr-only focusable">Skip to content</a>
+  <div class="site tp-transparency" id="site">
     <header>
       <div class="logo">
         <img src="/logo.png" alt="Pawthways logo" width="44" height="44">
@@ -47,60 +53,51 @@
     </header>
 
     <main role="main" aria-busy="true" id="main-content">
-      <section class="hero">
-        <div>
-          <h1>Our Transparency Commitment</h1>
-          <p>We reserve <strong>40%</strong> of Pawthways' revenue for animal rescues and publicize verifiable proofs every month. Below you can find the verification process, latest proofs, and tools to audit our numbers.</p>
+      <section class="hero" id="hero-section" aria-labelledby="hero-title">
+  <div class="hero-copy">
+    <h1 id="hero-title">Our Transparency Commitment</h1>
+    <p>We reserve <strong>40%</strong> of Pawthways' revenue for animal rescues and publicize verifiable, auditable proofs every month. Below you can find the verification process, latest proofs, and tools to audit our numbers.</p>
 
-          <div class="hero-ctas">
-  <a class="btn btn-primary" href="/transparency-dashboard.html" id="cta-dashboard" aria-label="Open transparency dashboard">Open dashboard</a>
-  <a class="btn btn-ghost" href="mailto:contact.pawthways@gmail.com" id="cta-contact" aria-label="Contact Pawthways by email">Verify or request report</a>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="/transparency-dashboard.html" id="cta-dashboard" aria-label="Open transparency dashboard">Open dashboard</a>
+      <a class="btn btn-ghost" href="mailto:contact.pawthways@gmail.com" id="cta-contact" aria-label="Contact Pawthways by email">Verify or request report</a>
+    </div>
+
+    <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
+      <div id="stats-card" class="card" style="min-width:240px">
+  <div class="stat"><span>Total revenue</span><strong id="totalRevenue">—</strong></div>
+  <div class="stat"><span>Reserved (40%)</span><strong id="totalReserved">—</strong></div>
+  <div class="stat"><span>Pending</span><strong id="pending">—</strong></div>
+  <div class="stat"><span>Donated</span><strong id="totalDonated">—</strong></div>
+  <div class="stat"><span>Updated</span><small id="lastUpdated" style="color:var(--muted)">—</small></div>
+  <div id="generatedWarning" style="display:none;color:var(--danger);font-size:13px;margin-top:6px">
+    Warning: Latest generated_at missing — verify source data.
+  </div>
 </div>
+      </div>
 
-          <div style="margin-top:18px;display:flex;gap:12px;align-items:center">
-            <div class="card" style="min-width:240px">
-              <div class="stat"><span>Total revenue</span><strong id="totalRevenue">—</strong></div>
-              <div class="stat"><span>Reserved (40%)</span><strong id="totalReserved">—</strong></div>
-              <div class="stat"><span>Donated</span><strong id="totalDonated">—</strong></div>
-              <div class="stat"><span>Updated</span><small id="lastUpdated" style="color:var(--muted)">—</small></div>
-            </div>
-
-            <div style="max-width:260px">
-              <h3 style="margin:0 0 8px 0">How to verify</h3>
-              <p style="margin:0;color:var(--muted)">Run these commands to inspect our API directly.</p>
-              <pre style="margin-top:8px;background:#00000005;padding:8px;border-radius:8px;font-size:13px;color:var(--muted)"><code>curl -s https://pawthways-web.vercel.app/api/admin-stats | jq .
+      <div style="max-width:260px">
+        <h3 style="margin:0 0 8px 0">How to verify</h3>
+        <p style="margin:0;color:var(--muted)">Run these commands to inspect our API directly.</p>
+        <pre style="margin-top:8px;background:#00000005;padding:8px;border-radius:8px;font-size:13px;color:var(--muted)"><code>curl -s https://pawthways-web.vercel.app/api/admin-stats | jq .
 curl -s "https://pawthways-web.vercel.app/api/transparency-proofs?limit=3" | jq .</code></pre>
-<!-- CSV export link -->
-            <div style="margin-top:12px">
-              <div style="font-size:13px;color:var(--muted);margin-bottom:6px">CSV export</div>
+      </div>
+    </div>
+  </div>
 
-              <!-- user-facing link (points to the latest CSV or an index) -->
-              <a id="csvLink" class="btn btn-ghost" href="/api/transparency-csv?latest=true" aria-label="Download latest CSV of transparency proofs">Download latest CSV</a>
-
-              <!-- small status text that will be updated by JS -->
-              <div id="csvStatus" style="display:inline-block;margin-left:10px;color:var(--muted);font-size:13px">Checking CSV availability…</div>
-
-              <!-- quick curl example -->
-              <pre style="margin-top:8px;background:#00000005;padding:8px;border-radius:8px;font-size:13px;color:var(--muted)"><code># Check CSV headers
-curl -I "https://pawthways-web.vercel.app/api/transparency-csv?latest=true"
-# Download
-curl -s "https://pawthways-web.vercel.app/api/transparency-csv?latest=true" -o transparency-latest.csv</code></pre>
-            </div>
-            </div>
-          </div>
-        </div>
-
-        <aside aria-labelledby="stats-aside">
-          <div id="donationCard" class="card" aria-live="polite">
-            <div style="font-size:13px;color:var(--muted)">Donation progress</div>
-            <div style="margin-top:6px"><strong id="donationPercent">—%</strong></div>
-            <div id="donationBarContainer">
-  <div id="donationBar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Donation progress percentage"></div>
-</div>
-            <div style="margin-top:10px;font-size:12px;color:var(--muted)"><a href="/transparency-dashboard.html">Open full dashboard</a></div>
-          </div>
-        </aside>
-      </section>
+  <figure class="hero-figure" role="img" aria-label="Happy rescued dogs after treatment">
+    <!-- responsive srcset: replace with your images in /assets/img/ -->
+    <img 
+      src="/assets/img/hero-640.jpg" 
+      srcset="/assets/img/hero-640.jpg 640w, /assets/img/hero-1200.jpg 1200w" 
+      sizes="(max-width:900px) 100vw, 320px" 
+      alt="Two rescued dogs playing after treatment" 
+      class="hero-img" 
+      loading="lazy" 
+      decoding="async">
+    <figcaption style="display:none">Two rescued dogs playing after treatment — Pawthways transparency in action.</figcaption>
+  </figure>
+</section>
 
       <section id="what-this-means">
         <h2>What this commitment means</h2>
@@ -113,32 +110,78 @@ curl -s "https://pawthways-web.vercel.app/api/transparency-csv?latest=true" -o t
 
       <section aria-labelledby="verification-title" id="verification" role="region">
   <h2 id="verification-title">4-Step Verification Process</h2>
-  <div class="timeline" role="list" aria-label="4 step verification timeline">
-    <div class="step" role="listitem" tabindex="0">
-      <div class="dot" aria-hidden="true"></div>
-      <div><strong>Step 1.</strong> Check <code>/api/admin-stats</code> for generated_at, totals.</div>
+
+  <div class="timeline-wrap card" aria-live="polite">
+    <div class="timeline-controls" style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <button id="runChecks" class="btn btn-ghost" aria-label="Run quick verification checks">Run quick checks</button>
+      <div id="timelineStatus" style="color:var(--muted);font-size:13px">Last checked: <span id="timelineLastChecked">—</span></div>
     </div>
-    <div class="step" role="listitem" tabindex="0">
-      <div class="dot" aria-hidden="true"></div>
-      <div><strong>Step 2.</strong> Review published PDF proofs in Latest Proofs.</div>
-    </div>
-    <div class="step" role="listitem" tabindex="0">
-      <div class="dot" aria-hidden="true"></div>
-      <div><strong>Step 3.</strong> Cross-verify with CSV exports (if available).</div>
-    </div>
-    <div class="step" role="listitem" tabindex="0">
-      <div class="dot" aria-hidden="true"></div>
-      <div><strong>Step 4.</strong> Validate timestamps and amounts on receipts.</div>
-    </div>
+
+    <ol class="timeline" role="list" aria-label="Verification steps">
+      <li class="step" id="step-1" role="listitem" tabindex="0" aria-describedby="step1-desc">
+        <span class="dot" aria-hidden="true"></span>
+        <div class="step-body">
+          <strong>Step 1. Check admin stats</strong>
+          <div id="step1-desc" class="step-desc" style="color:var(--muted)">
+            Verify <code>/api/admin-stats</code> exposes <code>generated_at</code>, totals and reserved values.
+            <div class="cmd" aria-hidden="true"><code>curl -s https://pawthways-web.vercel.app/api/admin-stats | jq .</code></div>
+            <div class="step-action"><a href="/transparency-dashboard.html" class="btn btn-ghost">Open dashboard</a></div>
+          </div>
+        </div>
+        <div class="step-state" aria-hidden="true" data-state="unknown">●</div>
+      </li>
+
+      <li class="step" id="step-2" role="listitem" tabindex="0" aria-describedby="step2-desc">
+        <span class="dot" aria-hidden="true"></span>
+        <div class="step-body">
+          <strong>Step 2. Review proofs</strong>
+          <div id="step2-desc" class="step-desc" style="color:var(--muted)">
+            Inspect latest PDF proofs in <em>Latest Proofs</em>. Thumbnails open the original PDFs.
+            <div class="cmd" aria-hidden="true"><code>curl -s "https://pawthways-web.vercel.app/api/transparency-proofs?limit=3" | jq .</code></div>
+          </div>
+        </div>
+        <div class="step-state" aria-hidden="true" data-state="unknown">●</div>
+      </li>
+
+      <li class="step" id="step-3" role="listitem" tabindex="0" aria-describedby="step3-desc">
+        <span class="dot" aria-hidden="true"></span>
+        <div class="step-body">
+          <strong>Step 3. Cross-verify CSV</strong>
+          <div id="step3-desc" class="step-desc" style="color:var(--muted)">
+            Download the CSV and confirm rows match totals and proofs.
+            <div class="cmd" aria-hidden="true"><code>curl -s "https://pawthways-web.vercel.app/assets/csv/transparency-latest.csv" -o transparency.csv</code></div>
+            <div class="step-action">
+  <a id="csvLink" class="btn btn-ghost" href="/assets/csv/transparency-latest.csv">Download CSV</a>
+  <span id="csvStatus" style="margin-left:8px;color:var(--muted);font-size:13px;">Checking…</span>
+</div>
+        </div>
+        <div class="step-state" aria-hidden="true" data-state="unknown">●</div>
+      </li>
+
+      <li class="step" id="step-4" role="listitem" tabindex="0" aria-describedby="step4-desc">
+        <span class="dot" aria-hidden="true"></span>
+        <div class="step-body">
+          <strong>Step 4. Validate receipts</strong>
+          <div id="step4-desc" class="step-desc" style="color:var(--muted)">
+            Validate timestamps and amounts inside the PDF receipts match CSV and admin stats.
+            <div class="note" style="margin-top:6px;color:var(--muted)">Tip: open PDF → check date & amount fields, compare to CSV rows.</div>
+          </div>
+        </div>
+        <div class="step-state" aria-hidden="true" data-state="unknown">●</div>
+      </li>
+    </ol>
   </div>
 </section>
 
       <section id="latest-proofs" role="region" aria-labelledby="proofs-title">
   <h2 id="proofs-title">Latest Proofs</h2>
-  <div id="proofs" class="proofs" aria-live="polite" aria-busy="true" aria-label="Latest proof documents">
+  <div id="proofs-desc" class="sr-only">Latest published receipts and transfer proofs (PDFs). Each card links to the original proof document.</div>
+  <div id="proofs" class="proofs" aria-live="polite" aria-busy="true" aria-label="Latest proof documents" aria-describedby="proofs-desc"></div>
     <!-- Proof cards injected by JS -->
+  <div id="proofFallback" class="card" style="display:none;margin-top:12px">
+    <strong>No proofs available right now.</strong>
+    <p style="margin:6px 0 0;color:var(--muted)">Try again later or inspect our API directly via the curl commands in "How to verify". If you need specific documents, email <a href="mailto:contact.pawthways@gmail.com">contact.pawthways@gmail.com</a>.</p>
   </div>
-  <div id="proofFallback" class="card" style="display:none;margin-top:12px">No proofs available right now. Try again later or inspect our API directly.</div>
 </section>
 
 <section id="philosophy" aria-labelledby="philosophy-title">
@@ -156,15 +199,19 @@ curl -s "https://pawthways-web.vercel.app/api/transparency-csv?latest=true" -o t
   </div>
 </section>
 
-      <section id="publish">
-        <h2>What we publish</h2>
-        <ul>
-          <li>Monthly aggregates</li>
-          <li>Receipts / Proof PDFs</li>
-          <li>CSV downloads</li>
-          <li>Beneficiaries list</li>
-        </ul>
-      </section>
+      <section id="publish" aria-labelledby="publish-title">
+  <h2 id="publish-title">What we publish</h2>
+  <ul>
+    <li>Monthly aggregates — summary totals and timelines</li>
+    <li>Receipts / Proof PDFs — individual PDFs for each donation or transfer</li>
+    <li>CSV downloads — machine-readable exports for auditing</li>
+    <li>Beneficiaries list — vetted partners and status</li>
+    <li>Audit reports (when available) — independent reviews and notes</li>
+  </ul>
+  <p style="color:var(--muted);margin-top:8px;font-size:13px">
+    <strong>Privacy note:</strong> Public proofs have personally identifiable information (PII) removed or redacted. Legal review is required before any PII is published.
+  </p>
+</section>
 
       <section id="faq">
         <h2>FAQ</h2>
@@ -178,10 +225,10 @@ curl -s "https://pawthways-web.vercel.app/api/transparency-csv?latest=true" -o t
 
     </main>
 
-    <footer>
-      <div>&copy; Pawthways — <a href="/terms.html">Terms</a> • <a href="/privacy.html">Privacy</a></div>
-      <div style="color:var(--muted)"><!-- TODO: legal pages --> Legal review: <span id="needsLegal">Not marked</span></div>
-    </footer>
+    <footer role="contentinfo" aria-label="Site footer">
+  <div>&copy; Pawthways — <a href="/terms.html">Terms</a> • <a href="/privacy.html">Privacy</a></div>
+  <div style="color:var(--muted)"><!-- needs-legal-review: pending --> Legal review: <span id="needsLegal">Not marked</span></div>
+</footer>
   </div>
 
    <script src="/assets/js/transparency-commitment.js" defer></script>

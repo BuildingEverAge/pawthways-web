@@ -28,6 +28,16 @@ function formatCurrency(num){
 }
 
 function safeNum(v){ if(v==null) return 0; if(typeof v==='string') v = v.replace(/[^0-9.-]/g,''); return Number(v)||0 }
+// --- helpers ---
+function escapeAttr(s){
+  return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showGeneratedWarning(show){
+  const el = document.getElementById('generatedWarning');
+  if (!el) return;
+  el.style.display = show ? 'block' : 'none';
+}
 
 async function validateThumbUrl(url){
   try {
@@ -36,7 +46,8 @@ async function validateThumbUrl(url){
     const ct = (res.headers.get('content-type') || '').toLowerCase();
     return ct.startsWith('image/');
   } catch (e) {
-    return true; // Optimistic fallback for CORS
+    // Be conservative: if HEAD fails (CORS/network), return false to avoid broken thumbnails.
+    return false;
   }
 }
 
@@ -63,6 +74,13 @@ async function renderStats(){
   document.getElementById('totalRevenue').textContent = totalRevenue ? formatCurrency(totalRevenue) : '—';
   document.getElementById('totalReserved').textContent = totalReserved ? formatCurrency(totalReserved) : '—';
   document.getElementById('totalDonated').textContent = totalDonated ? formatCurrency(totalDonated) : '—';
+  const pending = safeNum(stats.pending ?? stats.to_distribute ?? stats.remaining ?? stats.pending_amount);
+  const pendingEl = document.getElementById('pending');
+  if (pendingEl) pendingEl.textContent = pending ? formatCurrency(pending) : '—';
+
+  // generated_at warning
+  const generatedAtCheck = stats.generated_at ?? stats.generatedAt ?? stats.updated_at ?? stats.timestamp ?? null;
+  if (!generatedAtCheck) showGeneratedWarning(true); else showGeneratedWarning(false);
 
   const percent = totalRevenue ? Math.round((totalDonated / totalRevenue) * 100) : 0;
   document.getElementById('donationPercent').textContent = percent + '%';
@@ -83,13 +101,13 @@ async function renderStats(){
   if (main) main.setAttribute('aria-busy','false');
 }
 
+// Replace renderProofs() with this improved version
 async function renderProofs(){
   const container = document.getElementById('proofs');
   container.setAttribute('aria-busy','true');
   container.innerHTML = '';
 
   const r = await fetchWithTimeout('/api/transparency-proofs?limit=6');
-
   if (!r || !r.json) {
     document.getElementById('proofFallback').style.display = 'block';
     container.setAttribute('aria-busy','false');
@@ -106,43 +124,78 @@ async function renderProofs(){
   for (const p of arr.slice(0,6)) {
     const docUrl = p.doc_url ?? p.pdf_url ?? p.url ?? '#';
     const thumb = p.thumbnail_url ?? p.thumb_url ?? p.thumb ?? null;
-    const title = p.title ?? p.name ?? 'Donation receipt';
-    const date = p.date ?? p.created_at ?? p.timestamp ?? '';
+    const title = (p.title ?? p.name ?? 'Donation receipt').toString();
+    const dateRaw = p.date ?? p.created_at ?? p.timestamp ?? '';
+    const dateText = dateRaw ? (new Date(dateRaw)).toLocaleDateString() : '';
 
     const card = document.createElement('article');
-    card.className = 'proof card';
+    card.className = 'proof card fade-in';
     card.setAttribute('role','article');
     card.setAttribute('tabindex','0');
 
+    // image or placeholder
     if (thumb) {
+      const isValid = await validateThumbUrl(thumb);
       const img = document.createElement('img');
       img.alt = title;
       img.loading = 'lazy';
-      const valid = await validateThumbUrl(thumb);
-      img.src = valid ? thumb : '/assets/img/proof-placeholder.png';
-      img.onerror = function(){ this.src = '/assets/img/proof-placeholder.png'; this.setAttribute('aria-hidden','true'); };
+      img.decoding = 'async';
+      img.src = isValid ? thumb : '/assets/img/proof-placeholder.png';
+      img.onerror = function(){ this.src = '/assets/img/proof-placeholder.png'; };
       card.appendChild(img);
     } else {
       const ph = document.createElement('div');
       ph.className = 'proof-placeholder';
-      ph.textContent = 'No thumbnail';
+      ph.appendChild(document.createTextNode('No thumbnail'));
       card.appendChild(ph);
     }
 
+    // meta
     const meta = document.createElement('div');
-    meta.style.marginTop = '8px';
-    meta.style.color = 'var(--muted)';
-    meta.textContent = date ? new Date(date).toLocaleDateString() : '';
+    meta.className = 'proof-meta';
+    const metaId = 'proof-meta-' + (p.id ?? Math.random().toString(36).slice(2,8));
+    meta.id = metaId;
+    card.setAttribute('aria-describedby', metaId);
+    
+    if (dateText) {
+      const dateDiv = document.createElement('div');
+      dateDiv.appendChild(document.createTextNode(dateText));
+      meta.appendChild(dateDiv);
+    }
+    if (p.amount) {
+      const amountDiv = document.createElement('div');
+      amountDiv.appendChild(document.createTextNode(`Amount: ${p.amount}`));
+      meta.appendChild(amountDiv);
+    }
+    card.appendChild(meta);
 
+    // link
     const link = document.createElement('a');
     link.href = docUrl || '#';
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.textContent = 'Open proof';
     link.className = 'proof-link';
-    link.setAttribute('aria-label', `Open proof: ${title}`);
+    link.setAttribute('aria-label', `Open proof: ${escapeAttr(title)}`);
+    link.appendChild(document.createTextNode('Open proof'));
 
-    card.appendChild(meta);
+    // verify PDF HEAD and annotate
+    (async function verifyPdf(url, anchor){
+      try {
+        const h = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+        const ct = h && h.headers ? (h.headers.get('content-type') || '') : '';
+        const length = h && h.headers ? (Number(h.headers.get('content-length')) || 0) : 0;
+        if (!(h && h.ok && ct.includes('pdf'))) {
+          anchor.title = 'Proof link — not verified as PDF';
+          console.warn('Proof not verified as PDF:', url, 'content-type:', ct);
+        }
+        if (length && length > 10 * 1024 * 1024) {
+          anchor.title = 'Large file (>10MB) — consider downloading separately';
+        }
+      } catch(e){
+        // ignore, best-effort
+      }
+    })(docUrl, link);
+
     card.appendChild(link);
     container.appendChild(card);
   }
@@ -207,4 +260,74 @@ async function checkCsvAvailability(){
 if (window._pwCommitmentInit) {
   // small timeout so it runs after initial UI paint
   setTimeout(checkCsvAvailability, 600);
+}
+
+// Optional: IntersectionObserver lazy fill (progressive enhancement)
+(function lazyHeroImg(){
+  const img = document.querySelector('.hero-img');
+  if (!img) return;
+  if ('loading' in HTMLImageElement.prototype) return; // browser supports native lazy
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if (e.isIntersecting){
+        const src = img.getAttribute('data-src') || img.src;
+        if (src) img.src = src;
+        io.disconnect();
+      }
+    });
+  });
+  io.observe(img);
+})();
+
+// Quick verification checks for timeline
+async function quickTimelineChecks(){
+  const map = [
+    { id: 'step-1', url: '/api/admin-stats', type: 'json' },
+    { id: 'step-2', url: '/api/transparency-proofs?limit=1', type: 'json' },
+    { id: 'step-3', url: '/assets/csv/transparency-latest.csv', type: 'head' },
+  ];
+  const now = new Date();
+  const lastCheckedEl = document.getElementById('timelineLastChecked');
+  if (lastCheckedEl) lastCheckedEl.textContent = now.toLocaleString();
+
+  for (const m of map){
+    const stateEl = document.querySelector(`#${m.id} .step-state`);
+    if (!stateEl) continue;
+    // set pending
+    stateEl.setAttribute('data-state','unknown');
+    try {
+      if (m.type === 'json'){
+        const r = await fetchWithTimeout(m.url, {}, 3500);
+        if (r && r.json) {
+          // simple validation: json object or array length
+          const ok = (typeof r.json === 'object') && (Array.isArray(r.json) ? r.json.length >= 0 : true);
+          stateEl.setAttribute('data-state', ok ? 'ok' : 'fail');
+        } else {
+          stateEl.setAttribute('data-state','fail');
+        }
+      } else if (m.type === 'head'){
+        // HEAD fetch for CSV
+        try {
+          const h = await fetch(m.url, { method: 'HEAD', cache:'no-store' , signal: (new AbortController()).signal});
+          stateEl.setAttribute('data-state', h && h.ok ? 'ok' : 'fail');
+        } catch(e){
+          stateEl.setAttribute('data-state','fail');
+        }
+      }
+    } catch(e){
+      stateEl.setAttribute('data-state','fail');
+    }
+  }
+}
+
+// bind to button
+const runBtn = document.getElementById('runChecks');
+if (runBtn) {
+  runBtn.addEventListener('click', async function(){
+    runBtn.setAttribute('disabled','true');
+    runBtn.textContent = 'Checking…';
+    await quickTimelineChecks();
+    runBtn.removeAttribute('disabled');
+    runBtn.textContent = 'Run quick checks';
+  });
 }
