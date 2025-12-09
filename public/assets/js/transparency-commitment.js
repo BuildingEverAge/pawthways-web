@@ -39,15 +39,17 @@ function showGeneratedWarning(show){
   el.style.display = show ? 'block' : 'none';
 }
 
-async function validateThumbUrl(url){
+async function validateThumbUrl(url, timeoutMs = 3000){
   try {
-    const res = await fetch(url, { method: 'HEAD', cache: 'no-store' });
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    const res = await fetch(url, { method: 'HEAD', cache: 'no-store', signal: controller.signal });
+    clearTimeout(id);
     if (!res.ok) return false;
     const ct = (res.headers.get('content-type') || '').toLowerCase();
     return ct.startsWith('image/');
   } catch (e) {
-    // Be conservative: if HEAD fails (CORS/network), return false to avoid broken thumbnails.
-    return false;
+    return false; // Conservative: timeout or CORS = use placeholder
   }
 }
 
@@ -57,10 +59,15 @@ async function renderStats(){
   if (main) main.setAttribute('aria-busy','true');
 
   if (!res || !res.json) {
-    document.getElementById('totalRevenue').textContent = '—';
-    document.getElementById('totalReserved').textContent = '—';
-    document.getElementById('totalDonated').textContent = '—';
-    document.getElementById('lastUpdated').textContent = 'API failed';
+    const totalRevenue = document.getElementById('totalRevenue');
+    const totalReserved = document.getElementById('totalReserved');
+    const totalDonated = document.getElementById('totalDonated');
+    const lastUpdated = document.getElementById('lastUpdated');
+    
+    if (totalRevenue) totalRevenue.textContent = '—';
+    if (totalReserved) totalReserved.textContent = '—';
+    if (totalDonated) totalDonated.textContent = '—';
+    if (lastUpdated) lastUpdated.textContent = 'API failed';
     if (main) main.setAttribute('aria-busy','false');
     return;
   }
@@ -71,9 +78,14 @@ async function renderStats(){
   const totalDonated = safeNum(stats.total_donated ?? stats.totalDonated ?? stats.donated ?? stats.total_distributed);
   const generatedAt = stats.generated_at ?? stats.generatedAt ?? stats.updated_at ?? stats.timestamp ?? null;
 
-  document.getElementById('totalRevenue').textContent = totalRevenue ? formatCurrency(totalRevenue) : '—';
-  document.getElementById('totalReserved').textContent = totalReserved ? formatCurrency(totalReserved) : '—';
-  document.getElementById('totalDonated').textContent = totalDonated ? formatCurrency(totalDonated) : '—';
+  const totalRevenueEl = document.getElementById('totalRevenue');
+  const totalReservedEl = document.getElementById('totalReserved');
+  const totalDonatedEl = document.getElementById('totalDonated');
+  
+  if (totalRevenueEl) totalRevenueEl.textContent = totalRevenue ? formatCurrency(totalRevenue) : '—';
+  if (totalReservedEl) totalReservedEl.textContent = totalReserved ? formatCurrency(totalReserved) : '—';
+  if (totalDonatedEl) totalDonatedEl.textContent = totalDonated ? formatCurrency(totalDonated) : '—';
+
   const pending = safeNum(stats.pending ?? stats.to_distribute ?? stats.remaining ?? stats.pending_amount);
   const pendingEl = document.getElementById('pending');
   if (pendingEl) pendingEl.textContent = pending ? formatCurrency(pending) : '—';
@@ -82,20 +94,31 @@ async function renderStats(){
   const generatedAtCheck = stats.generated_at ?? stats.generatedAt ?? stats.updated_at ?? stats.timestamp ?? null;
   if (!generatedAtCheck) showGeneratedWarning(true); else showGeneratedWarning(false);
 
-  const percent = totalRevenue ? Math.round((totalDonated / totalRevenue) * 100) : 0;
-  document.getElementById('donationPercent').textContent = percent + '%';
-
+  // Solo actualiza percent y bar si existen
+  const percentEl = document.getElementById('donationPercent');
   const bar = document.getElementById('donationBar');
-  const safePercent = Math.min(100, Math.max(0, percent));
-  bar.style.width = safePercent + '%';
-  bar.setAttribute('aria-valuenow', safePercent);
+  
+  if (percentEl || bar) {
+    const percent = totalRevenue ? Math.round((totalDonated / totalRevenue) * 100) : 0;
+    if (percentEl) percentEl.textContent = percent + '%';
+    
+    if (bar) {
+      const safePercent = Math.min(100, Math.max(0, percent));
+      bar.style.width = safePercent + '%';
+      bar.setAttribute('aria-valuenow', safePercent);
+    }
+  }
 
-  document.getElementById('lastUpdated').textContent = generatedAt ? (new Date(generatedAt)).toLocaleString() : '—';
+  const lastUpdatedEl = document.getElementById('lastUpdated');
+  if (lastUpdatedEl) lastUpdatedEl.textContent = generatedAt ? (new Date(generatedAt)).toLocaleString() : '—';
 
-  if (stats.needs_legal_review) {
-    document.getElementById('needsLegal').textContent = 'Needs legal review';
-  } else {
-    document.getElementById('needsLegal').textContent = 'Not marked';
+  const needsLegalEl = document.getElementById('needsLegal');
+  if (needsLegalEl) {
+    if (stats.needs_legal_review) {
+      needsLegalEl.textContent = 'Needs legal review';
+    } else {
+      needsLegalEl.textContent = 'Not marked';
+    }
   }
 
   if (main) main.setAttribute('aria-busy','false');
@@ -141,7 +164,10 @@ async function renderProofs(){
       img.loading = 'lazy';
       img.decoding = 'async';
       img.src = isValid ? thumb : '/assets/img/proof-placeholder.png';
-      img.onerror = function(){ this.src = '/assets/img/proof-placeholder.png'; };
+      img.onerror = function(){ 
+        this.src = '/assets/img/proof-placeholder.png';
+        this.onerror = null; // Prevent infinite loop
+      };
       card.appendChild(img);
     } else {
       const ph = document.createElement('div');
@@ -232,27 +258,52 @@ async function renderProofs(){
   }
 })();
 
-// CSV availability check — updates the UI link/status
 async function checkCsvAvailability(){
+  const statusEl = document.getElementById('csvStatus');
+  const linkEl = document.getElementById('csvLink');
+  if (!statusEl || !linkEl) return;
+
+  // Try API first, fallback to static file
+  let csvUrl = '/api/transparency-csv?latest=true';
+  let isAvailable = false;
+
   try {
-    const res = await fetch('/api/transparency-csv?latest=true', { method: 'HEAD', cache: 'no-store' });
-    const statusEl = document.getElementById('csvStatus');
-    const linkEl = document.getElementById('csvLink');
-    if (!statusEl || !linkEl) return;
+    const res = await fetch(csvUrl, { method: 'HEAD', cache: 'no-store' });
     if (res && res.ok) {
-      // ensure link points to the CSV (HEAD success)
-      linkEl.href = '/api/transparency-csv?latest=true';
-      statusEl.textContent = 'CSV available';
+      isAvailable = true;
     } else {
-      statusEl.textContent = 'CSV not available';
-      // disable link visually
-      linkEl.classList.add('disabled');
-      linkEl.setAttribute('aria-disabled','true');
-      linkEl.href = '#';
+      // Fallback to static CSV
+      csvUrl = '/assets/csv/transparency-latest.csv';
+      const staticRes = await fetch(csvUrl, { method: 'HEAD', cache: 'no-store' });
+      if (staticRes && staticRes.ok) {
+        isAvailable = true;
+      }
     }
   } catch (e) {
-    const statusEl = document.getElementById('csvStatus');
-    if (statusEl) statusEl.textContent = 'CSV check failed';
+    // Try static fallback
+    csvUrl = '/assets/csv/transparency-latest.csv';
+    try {
+      const staticRes = await fetch(csvUrl, { method: 'HEAD', cache: 'no-store' });
+      if (staticRes && staticRes.ok) {
+        isAvailable = true;
+      }
+    } catch (e2) {
+      console.warn('CSV check failed:', e2);
+    }
+  }
+
+  if (isAvailable) {
+    linkEl.href = csvUrl;
+    statusEl.textContent = 'CSV available';
+    statusEl.style.color = 'var(--success)';
+    linkEl.classList.remove('disabled');
+    linkEl.removeAttribute('aria-disabled');
+  } else {
+    statusEl.textContent = 'CSV not available';
+    statusEl.style.color = 'var(--danger)';
+    linkEl.classList.add('disabled');
+    linkEl.setAttribute('aria-disabled','true');
+    linkEl.href = '#';
   }
 }
 
