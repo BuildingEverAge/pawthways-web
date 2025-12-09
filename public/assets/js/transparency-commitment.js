@@ -263,8 +263,8 @@ async function checkCsvAvailability(){
   const linkEl = document.getElementById('csvLink');
   if (!statusEl || !linkEl) return;
 
-  // Try API first, fallback to static file
-  let csvUrl = '/api/transparency-csv?latest=true';
+  // Try static file first (no API available in dev)
+  let csvUrl = '/assets/csv/transparency-latest.csv';
   let isAvailable = false;
 
   try {
