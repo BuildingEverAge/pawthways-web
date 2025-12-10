@@ -30,7 +30,7 @@ header{display:flex;align-items:center;justify-content:space-between;gap:16px}
 .badge{background:var(--accent);color:#fff;padding:6px 10px;border-radius:999px;font-weight:600}
 
 /* Hero */
-.hero{display:grid;grid-template-columns:1fr 320px;gap:22px;align-items:center;margin-top:20px}
+
 .hero h1{font-size:28px;margin:0}
 .hero p{color:var(--muted);margin-top:8px}
 .hero-ctas{margin-top:16px;display:flex;gap:10px}
@@ -111,19 +111,6 @@ a.disabled {
   cursor:default; 
 }
 
-/* Hero image styles */
-.hero{ display:grid; grid-template-columns: 1fr 360px; gap:22px; align-items:center; margin-top:20px; }
-.hero-copy{ max-width: 720px; }
-.hero-figure{ margin:0; display:block; }
-.hero-img{ width:100%; height:220px; object-fit:cover; border-radius:12px; box-shadow:0 6px 20px rgba(2,6,23,0.06); display:block; }
-@media (max-width:900px){
-  .hero{ grid-template-columns:1fr; }
-  .hero-img{ height:180px; width:100%; }
-}
-@media (max-width:420px){
-  .hero-img{ height:160px; }
-}
-
 /* Timeline styles */
 .timeline-wrap { padding:14px; }
 .timeline { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
@@ -183,3 +170,71 @@ a.disabled {
 
 /* timeline small fix - ensure step wraps */
 .step { align-items:flex-start; gap:12px; }
+
+/* FIX section spacing */
+.tp-transparency section + section {
+  margin-top: var(--space-xl);
+}
+
+#latest-proofs,
+#philosophy,
+#publish,
+#faq {
+  scroll-margin-top: 70px;
+}
+
+/* FIX latest proofs and philosophy spacing */
+#latest-proofs {
+  padding-bottom: 32px;
+}
+
+#philosophy .card {
+  margin-top: 12px;
+}
+
+/* === HERO: authoritative layout & spacing (paste at EOF) === */
+.hero {
+  display: grid;
+  grid-template-columns: minmax(320px, 1fr) 420px;
+  gap: 32px;
+  align-items: start;
+  margin-top: 30px;
+}
+
+.hero-copy { 
+  max-width: 720px; 
+}
+
+.hero-figure {
+  margin: 0;
+  align-self: start;
+  justify-self: end;
+  width: 100%;
+  max-width: 420px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.hero-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(2,6,23,0.06);
+}
+
+@media (max-width: 900px){
+  .hero { 
+    grid-template-columns: 1fr; 
+  }
+  .hero-figure { 
+    max-width: 100%; 
+    justify-self: stretch; 
+  }
+  .hero-img { 
+    max-height: 240px; 
+  }
+}

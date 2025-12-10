@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Our Transparency Commitment — Pawthways</title>
+  <meta name="description" content="Pawthways: 40% of revenue reserved for rescues — monthly proofs, receipts and CSVs available for verification." />
+  <link rel="canonical" href="https://pawthways-web.vercel.app/transparency-commitment.html" />
+
+  <!-- JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"WebPage",
+    "name":"Our Transparency Commitment",
+    "url":"https://pawthways-web.vercel.app/transparency-commitment.html",
+    "description":"40% of revenue reserved for rescues. Monthly aggregates, receipts and CSV downloads available.",
+    "publisher":{
+      "@type":"Organization",
+      "name":"Pawthways",
+      "url":"https://pawthways-web.vercel.app"
+    }
+  }
+  </script>
+
+  <!-- core project CSS (main) + transparency-specific CSS (must be used) -->
+  <link rel="stylesheet" href="/assets/css/main.css" />
+  <link rel="stylesheet" href="/assets/css/transparency-commitment.css" />
+</head>
+<body class="tp-transparency">
+
+  <main id="main-content" aria-busy="false">
+
+    <!-- HERO -->
+    <section class="hero tp-hero">
+  <div class="hero-copy">
+    <h1>Our Transparency Commitment</h1>
+    <p class="major">We reserve <strong>40%</strong> of revenue for animal rescues. Proofs, receipts and CSVs are public and verifiable.</p>
+    <p>
+      <a class="button primary" href="/transparency-dashboard.html" aria-label="Open transparency dashboard">View Dashboard</a>
+      <a class="button" href="mailto:contact.pawthways@gmail.com" aria-label="Contact us by email">Contact</a>
+    </p>
+    <div id="generatedWarning" class="notice" style="display:none">Some values are generated locally because API did not return fresh data.</div>
+  </div>
+
+  <figure class="hero-figure">
+    <img class="hero-img" src="/assets/img/transparency-hero.jpg" alt="Volunteers with rescued animals" />
+    <div class="badges"><span class="badge">40% → Donated</span></div>
+  </figure>
+</section>
+
+<!-- STATS CARD (required by main.js) -->
+<section id="stats" aria-label="Transparency stats" class="tp-stats">
+  <div id="stats-card" class="box">
+    <div class="stat"><span>Total revenue</span><strong id="totalRevenue">—</strong></div>
+    <div class="stat"><span>Reserved</span><strong id="totalReserved">—</strong></div>
+    <div class="stat"><span>Donated</span><strong id="totalDonated">—</strong></div>
+    <div class="stat"><span>Pending</span><strong id="pending">—</strong></div>
+    <div class="stat"><span>Last updated</span><small id="lastUpdated">—</small></div>
+    <div class="stat"><span>Donation %</span><strong id="donationPercent">—</strong></div>
+
+    <!-- donation bar expected by CSS / JS -->
+    <div id="donationBarContainer" aria-hidden="false" style="margin-top:12px;">
+      <div id="donationBar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="width:0%"></div>
+    </div>
+  </div>
+</section>
+
+    <!-- WHAT THIS COMMITMENT MEANS -->
+    <section id="what-commitment">
+      <h2>What this commitment means</h2>
+      <ul>
+        <li>40% of revenue is reserved for rescues.</li>
+        <li>Public proofs (PDF receipts & transfers).</li>
+        <li>Public data always verifiable.</li>
+      </ul>
+    </section>
+
+    <!-- 4-STEP VERIFICATION PROCESS -->
+    <section id="verification-process">
+      <h2>4-Step Verification Process</h2>
+      <ol>
+        <li>Check <code>/api/admin-stats</code> (see live numbers).</li>
+        <li>Review proofs (PDF receipts available below).</li>
+        <li>Cross-verify with CSV (if available).</li>
+        <li>Validate timestamps on receipts.</li>
+      </ol>
+      <div class="timeline" aria-hidden="false"> <!-- timeline visual implemented in CSS -->
+        <!-- simple timeline markup for CSS styling -->
+        <div class="step">1</div>
+        <div class="step">2</div>
+        <div class="step">3</div>
+        <div class="step">4</div>
+      </div>
+    </section>
+
+    <!-- WHAT WE PUBLISH -->
+    <section id="what-we-publish">
+      <h2>What we publish</h2>
+      <ul>
+        <li>Monthly aggregates</li>
+        <li>Receipts / Proof PDFs</li>
+        <li>CSV downloads</li>
+        <li>Beneficiaries list</li>
+        <li>Audit reports (when available)</li>
+      </ul>
+    </section>
+
+    <!-- HOW TO VERIFY (human + technical) -->
+    <section id="how-to-verify">
+      <h2>How to verify</h2>
+      <p>Human checks and technical commands:</p>
+      <pre><code>curl -s https://pawthways-web.vercel.app/api/admin-stats | jq .
+curl -s "https://pawthways-web.vercel.app/api/transparency-proofs?limit=3" | jq .
+</code></pre>
+      <p><a id="csvLink" class="button" href="#" aria-disabled="true">Download CSV</a> <span id="csvStatus">Checking CSV...</span></p>
+    </section>
+
+    <!-- LATEST PROOFS (API integration) -->
+    <section id="latest-proofs">
+      <h2>Latest Proofs</h2>
+      <div id="proofs" aria-live="polite" aria-busy="false" class="proofs">
+        <!-- JS will render up to 6 proofs here -->
+      </div>
+    </section>
+
+    <!-- PHILOSOPHY -->
+    <section id="philosophy">
+      <h2>Why we donate</h2>
+      <ul>
+        <li>We believe rescue care saves lives.</li>
+        <li>Transparent funding builds trust.</li>
+        <li>Public proofs ensure accountability.</li>
+      </ul>
+      <p class="statement">We commit to publish verifiable proof for the reserved funds every month.</p>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+      <h2>FAQ</h2>
+      <details>
+        <summary>Refunds</summary>
+        <p>Refunds are handled per our Terms — contact support for details.</p>
+      </details>
+      <details>
+        <summary>Rejected NGO</summary>
+        <p>If a beneficiary is rejected we publish the reason and next steps.</p>
+      </details>
+      <details>
+        <summary>How to request a report</summary>
+        <p>Use the contact email and include your request; we will provide available reports.</p>
+      </details>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer role="contentinfo">
+    <div class="row">
+      <div class="col-6">
+        <a href="/terms.html">Terms</a>
+        <a href="/privacy.html">Privacy</a>
+      </div>
+      <div class="col-6">
+        <!-- TODO: legal pages -->
+        <small>needs-legal-review</small>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Core project script (main.js) and a small page init script that uses exposed helpers -->
+  <script src="/assets/js/main.js"></script>
+  <script>
+    // page-specific bootstrap that calls the helpers exposed by main.js (pwTransparency)
+    (function(){
+      try {
+        if (window.pwTransparency) {
+          // renderStats / renderProofs / checkCsvAvailability are idempotent and safe
+          window.pwTransparency.renderStats();
+          window.pwTransparency.renderProofs();
+          window.pwTransparency.checkCsvAvailability();
+        }
+      } catch(e){ console.warn('Transparency init failed', e); }
+    })();
+  </script>
+</body>
+</html>
