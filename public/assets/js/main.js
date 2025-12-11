@@ -379,7 +379,7 @@
 
   // --- renderStats ---
   async function renderStats(){
-    const res = await fetchWithTimeout('http://localhost:8010/proxy/api/admin-stats');
+    const res = await fetchWithTimeout('/api/admin-stats');
     const main = root.querySelector('#main-content') || root;
     if (main) main.setAttribute('aria-busy','true');
 
@@ -427,7 +427,7 @@
 
   // --- renderProofs ---
   async function renderProofs(){
-    const res = await fetchWithTimeout('http://localhost:8010/proxy/api/transparency-proofs');
+    const res = await fetchWithTimeout('/api/transparency-proofs');
     const container = root.querySelector('#proofs');
     if (!container) return;
     container.innerHTML = '';
@@ -480,7 +480,7 @@
     const linkEl = root.querySelector('#csvLink');
     if (!statusEl || !linkEl) return;
 
-    let csvUrl = 'http://localhost:8010/proxy/api/transparency-csv?latest=true';
+    let csvUrl = '/api/transparency-csv?latest=true';
     let isAvailable = false;
     try {
       const r = await fetchWithTimeout(csvUrl, { method:'HEAD' });
@@ -557,7 +557,7 @@ window.pwTransparency = {
   }
 
   window.pwTransparency.renderStats = async function(){
-    const url = 'http://localhost:8010/proxy/api/admin-stats';
+    const url = '/api/admin-stats';
     const generatedWarning = document.getElementById('generatedWarning');
     try {
       const res = await fetchWithTimeout(url, {}, 4500);
@@ -607,7 +607,7 @@ window.pwTransparency = {
     container.setAttribute('aria-busy','true');
     container.innerHTML = '';
 
-    const url = 'http://localhost:8010/proxy/api/transparency-proofs?limit=' + encodeURIComponent(limit);
+    const url = '/api/transparency-proofs?limit=' + encodeURIComponent(limit);
     try {
       const res = await fetchWithTimeout(url, {}, 4500);
       const arr = await res.json();
@@ -636,7 +636,7 @@ window.pwTransparency = {
     const csvBtn = document.getElementById('csvLink');
     const csvStatus = document.getElementById('csvStatus');
     if (!csvBtn) return;
-    const csvUrl = 'http://localhost:8010/proxy/api/transparency-csv?latest=true';
+    const csvUrl = '/api/transparency-csv?latest=true';
     try {
       const res = await fetchWithTimeout(csvUrl, { method:'HEAD' }, 2500);
       if (res && res.ok) {
@@ -665,4 +665,5 @@ window.pwTransparency = {
   }
 
 })(window, document);
+
 
