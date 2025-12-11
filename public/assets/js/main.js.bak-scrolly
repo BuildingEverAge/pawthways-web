@@ -96,7 +96,7 @@
 				})();
 
 	// Smooth scroll.
-		if ($.fn && $.fn.scrolly) { $('.smooth-scroll').scrolly(); }
+		$('.smooth-scroll').scrolly();
 		$('.smooth-scroll-middle').scrolly({ anchor: 'middle' });
 
 	// Wrapper.
@@ -345,4 +345,3 @@
  * /assets/js/transparency-commitment.js
  * This keeps main.js clean and focused on general theme functionality.
  */
-
