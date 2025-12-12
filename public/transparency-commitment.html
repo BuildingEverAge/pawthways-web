@@ -1,6 +1,7 @@
 ﻿<!doctype html>
 <html lang="en" class="no-js">
 <head>
+    <link rel="icon" href="/assets/img/paw-transparency.jpg" />
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Our Transparency Commitment â€” Pawthways</title>
@@ -23,9 +24,9 @@
   }
   </script>
 
-  <!-- core project CSS (main) + transparency-specific CSS (must be used) -->
+  <!-- Core project CSS + transparency-specific CSS -->
   <link rel="stylesheet" href="/assets/css/main.css" />
-  <!-- transparency-commitment.css removed — using main.css -->
+  <link rel="stylesheet" href="/assets/css/transparency-commitment.css" />
 </head>
 <body class="tp-transparency">
 
@@ -44,8 +45,8 @@
   </div>
 
   <figure class="hero-figure">
-    <img class="hero-img" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='420'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='24' fill='%23666'>Hero image placeholder</text></svg>" alt="Volunteers with rescued animals" />
-    <div class="badges"><span class="badge">40% â†’ Donated</span></div>
+    <img class="hero-img" src="/assets/img/paw-transparency.jpg" alt="Volunteers with rescued animals" />
+    <div class="badges"><span class="badge">40% → Donated</span></div>
   </figure>
 </section>
 
@@ -168,62 +169,19 @@ curl -s "https://pawthways-web.vercel.app/api/transparency-proofs?limit=3" | jq 
     </div>
   </footer>
 
-  <!-- Core project script (main.js) and a small page init script that uses exposed helpers -->
-  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<!-- pw-shim: breakpoints/browser/scrolly inserted -->
-<script>
-/* Minimal shim for legacy html5up helpers so main.js won't crash.
-   This defines: breakpoints(), browser, and jQuery plugin stubs for scrolly/scrollex.
-   Safe: if real libs are later included, these harmlessly coexist. */
-(function(window, document){
-  try {
-    // breakpoints() stub (accepts config, no-op)
-    window.breakpoints = window.breakpoints || function(){ return {}; };
-
-    // browser stub (main.js checks browser.name and browser.canUse)
-    window.browser = window.browser || {
-      name: '',
-      canUse: function(){ return true; }
-    };
-
-    // Ensure jQuery exists (we already inject code.jquery if needed elsewhere)
-    var $ = window.jQuery;
-    if ($) {
-      // scrolly plugin stub (returns jQuery collection)
-      if (!$.fn.scrolly) {
-        $.fn.scrolly = function(){ return this; };
-      }
-      // scrollex plugin stub
-      if (!$.fn.scrollex) {
-        $.fn.scrollex = function(){ return this; };
-      }
-    } else {
-      // If jQuery absent, create tiny shim to avoid errors in inline boots.
-      window.jQuery = window.jQuery || function(){ return { fn: {} }; };
-    }
-  } catch(e){
-    console.warn('pw-shim init failed', e);
-  }
-})(window, document);
-</script>
-<script src="/assets/js/main.js"></script>
-  <script>
-    // page-specific bootstrap that calls the helpers exposed by main.js (pwTransparency)
-    (function(){
-      try {
-        if (window.pwTransparency) {
-          // renderStats / renderProofs / checkCsvAvailability are idempotent and safe
-          window.pwTransparency.renderStats();
-          window.pwTransparency.renderProofs();
-          window.pwTransparency.checkCsvAvailability();
-        }
-      } catch(e){ console.warn('Transparency init failed', e); }
-    })();
-  </script>
+  <!-- Core project scripts -->
+  <script src="/assets/js/jquery.min.js"></script>
+    <script src="/assets/js/jquery.scrolly.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-scrolly@2.0.0/jquery.scrolly.min.js"></script>
+  <script src="/assets/js/breakpoints.min.js"></script>
+  <script src="/assets/js/browser.min.js"></script>
+  <script src="/assets/js/util.js"></script>
+  <script src="/assets/js/main.js"></script>
+  
+  <!-- Transparency Commitment module (auto-initializes) -->
+  <script src="/assets/js/transparency-commitment.js"></script>
 </body>
 </html>
-
-
 
 
 
