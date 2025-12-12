@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "pawthways-web",
   "version": "1.0.0",
   "type": "module",
@@ -11,5 +11,11 @@
   "scripts": {
     "build": "echo No build needed",
     "vercel-build": "echo Building static site"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "supertest": "^7.1.4"
   }
 }
+
+
