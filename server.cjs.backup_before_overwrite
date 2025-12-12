@@ -1,0 +1,58 @@
+﻿// auto-generated robust server.cjs (safe: serves static files and API static endpoints only)
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
+
+const app = express();
+const port = process.env.PORT || 3000;
+
+const publicDir = path.join(__dirname, 'public');
+app.use(express.static(publicDir));
+
+// Helper safe sender
+function safeSendFile(res, relativePath, contentType) {
+  try {
+    const full = path.join(publicDir, relativePath);
+    if (fs.existsSync(full)) {
+      if (contentType) res.setHeader('Content-Type', contentType);
+      return res.sendFile(full);
+    } else {
+      return res.status(404).send('Not found');
+    }
+  } catch (e) {
+    console.error('safeSendFile error:', e);
+    return res.status(500).send('Server error');
+  }
+}
+
+// Static API endpoints (files without extension)
+app.get('/api/admin-stats', (req, res) => {
+  return safeSendFile(res, path.join('api','admin-stats'), 'application/json; charset=utf-8');
+});
+
+app.get('/api/transparency-proofs', (req, res) => {
+  return safeSendFile(res, path.join('api','transparency-proofs'), 'application/json; charset=utf-8');
+});
+
+app.get('/api/transparency-csv', (req, res) => {
+  return safeSendFile(res, path.join('api','transparency-csv'), 'text/csv; charset=utf-8');
+});
+
+// Keep the fallback that serves /page -> /page.html if exists
+app.get('*', (req, res, next) => {
+  try {
+    const urlPath = decodeURIComponent(req.path);
+    if (path.extname(urlPath)) return next();
+    const candidate = path.join(publicDir, urlPath + '.html');
+    if (fs.existsSync(candidate)) {
+      return res.sendFile(candidate);
+    }
+  } catch (e) {
+    // ignore and continue
+  }
+  next();
+});
+
+app.listen(port, () => {
+  console.log('Serving ./public at http://localhost:' + port);
+});

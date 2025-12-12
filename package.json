@@ -5,9 +5,11 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.84.0",
     "dotenv": "^17.2.3",
+    "express": "^5.2.1",
     "node-fetch": "^3.3.2"
   },
-    "scripts": { "build": "echo No build needed",
+  "scripts": {
+    "build": "echo No build needed",
     "vercel-build": "echo Building static site"
   }
 }
